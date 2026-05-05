@@ -79,7 +79,7 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,Helvetica,sans-se
 #rec-rationale{font-size:10px;line-height:1.65;color:var(--ui-muted2);}
 
 
-#slice-panel{position:absolute;bottom:12px;right:12px;z-index:10;
+#slice-panel{position:absolute;top:12px;right:12px;z-index:10;
   background:var(--ui-bg);border:1px solid var(--ui-border);border-radius:3px;
   padding:10px 14px;min-width:240px;
   box-shadow:0 1px 4px rgba(0,0,0,0.1);font-size:11px;
@@ -136,6 +136,10 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,Helvetica,sans-se
     <div class="val">&#956; = 13.6088</div>
     <div class="val">&#963; = 0.6963</div>
     <div class="val">CV = 0.7899</div>
+  </div>
+  <div class="section">
+    <div class="section-title">Risk Focus</div>
+    <div id="rec-badge"></div>
   </div>
 </div>
 
@@ -201,17 +205,6 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,Helvetica,sans-se
   </div>
 </div>
 
-<div id="legend">
-  <div class="leg-title">Surface density</div>
-  <div class="leg"><span class="sw" style="background:#cc3300"></span>Peak</div>
-  <div class="leg"><span class="sw" style="background:#e87722"></span>High</div>
-  <div class="leg"><span class="sw" style="background:#f5c518"></span>Mid</div>
-  <div class="leg"><span class="sw" style="background:#4daa57"></span>Low</div>
-  <div class="leg"><span class="sw" style="background:#2266cc"></span>Near-zero</div>
-  <div style="margin-top:6px;padding-top:6px;border-top:1px solid var(--ui-border);">
-  <div class="leg"><span class="sw" style="background:#9933cc"></span>Tail (&#8805;TVaR95)</div>
-  </div>
-</div>
 
 <div id="slice-panel">
   <h3>Cross-Section Slice</h3>
@@ -232,12 +225,7 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,Helvetica,sans-se
   <div id="slice-readout">Move slider to cut through surface.</div>
 </div>
 
-<div id="rec-panel">
-  <h3>Risk Focus</h3>
-  <div id="rec-badge"></div>
-  <div id="rec-rationale"></div>
-  
-</div>
+<div id="rec-panel" style="display:none;"></div>
 
 <div id="footer">Drag to rotate &nbsp;&middot;&nbsp; Scroll to zoom &nbsp;&middot;&nbsp; Right-drag to pan</div>
 
@@ -382,7 +370,7 @@ var model={
     act='Sev 20%: $'+(savS/1e6).toFixed(3)+'M/yr. Freq 30%: $'+(savL/1e6).toFixed(3)+'M/yr.';}
   var b=document.getElementById('rec-badge');
   b.textContent='Focus: '+focus;b.style.background=bBg;b.style.color=bColor;b.style.border='1px solid '+bColor;
-  document.getElementById('rec-rationale').textContent=rat;
+  
   
 })();
 
