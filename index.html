@@ -125,18 +125,18 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,Helvetica,sans-se
   <h2>CRR Joint Distribution</h2>
   <div class="section">
     <div class="section-title">Scope</div>
-    <div class="val">Portfolio — Paint & Coatings Manufacturing Plant</div>
+    <div class="val">Portfolio — Oil Refinery</div>
     <div class="scope-note">Multi-leaf portfolio simulation</div>
   </div>
   <div class="section">
     <div class="section-title">Poisson Frequency</div>
-    <div class="val">&#955; = 16.011</div>
+    <div class="val">&#955; = 10.007</div>
   </div>
   <div class="section">
     <div class="section-title">Lognormal Severity</div>
-    <div class="val">&#956; = 11.8316</div>
-    <div class="val">&#963; = 0.5184</div>
-    <div class="val">CV = 0.5553</div>
+    <div class="val">&#956; = 13.6088</div>
+    <div class="val">&#963; = 0.6963</div>
+    <div class="val">CV = 0.7899</div>
   </div>
 </div>
 
@@ -243,13 +243,13 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,Helvetica,sans-se
 
 <div id="contourLegend">
   <div class="cl-title">Annual Loss Contours (k &times; cost)</div>
-  <div class="cl-row"><span class="cl-sw" style="background:#009900"></span>P10 &mdash; $1,434,842</div>
-  <div class="cl-row"><span class="cl-sw" style="background:#0066cc"></span>P50 &mdash; $2,412,413</div>
-  <div class="cl-row"><span class="cl-sw" style="background:#cc9900"></span>P80 &mdash; $3,229,498</div>
-  <div class="cl-row"><span class="cl-sw" style="background:#cc3300"></span>P95 &mdash; $4,122,064</div>
-  <div class="cl-row"><span class="cl-sw" style="background:#0099aa"></span>EAL &mdash; $2,509,191</div>
-  <div class="cl-row"><span class="cl-sw" style="background:#cc6600"></span>TVaR80 &mdash; $3,868,020</div>
-  <div class="cl-row"><span class="cl-sw" style="background:#9933cc"></span>TVaR95 &mdash; $4,675,346</div>
+  <div class="cl-row"><span class="cl-sw" style="background:#009900"></span>P10 &mdash; $5,169,965</div>
+  <div class="cl-row"><span class="cl-sw" style="background:#0066cc"></span>P50 &mdash; $9,813,779</div>
+  <div class="cl-row"><span class="cl-sw" style="background:#cc9900"></span>P80 &mdash; $13,796,896</div>
+  <div class="cl-row"><span class="cl-sw" style="background:#cc3300"></span>P95 &mdash; $18,217,119</div>
+  <div class="cl-row"><span class="cl-sw" style="background:#0099aa"></span>EAL &mdash; $10,343,023</div>
+  <div class="cl-row"><span class="cl-sw" style="background:#cc6600"></span>TVaR80 &mdash; $17,014,557</div>
+  <div class="cl-row"><span class="cl-sw" style="background:#9933cc"></span>TVaR95 &mdash; $21,193,060</div>
 </div>
 
 <button id="btn-replay" disabled onclick="replayAnimation()">&#9654; Replay</button>
@@ -355,9 +355,9 @@ function setTheme(name){
 }
 
 var model={
-  lambda:16.011,mu:11.831600667860588,sigma:0.5184233559586251,
-  eal:2509191.3246160457,tvar80:3868020.409332187,tvar95:4675346.0426296145,
-  p10:1434842.1241978658,p50:2412413.0027925954,p80:3229498.1716617174,p95:4122063.935897813
+  lambda:10.007,mu:13.608814614223613,sigma:0.696333177522696,
+  eal:10343022.541364545,tvar80:17014557.236525998,tvar95:21193060.432953287,
+  p10:5169964.923863836,p50:9813778.964681752,p80:13796895.93907506,p95:18217118.791642684
 };
 
 /* ── Recommendation ── */
