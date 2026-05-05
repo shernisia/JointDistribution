@@ -104,13 +104,12 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,Helvetica,sans-se
 #slice-toggle.off{color:var(--ui-muted);background:var(--ui-hover);border:1px solid var(--ui-border);}
 
 #footer{position:absolute;bottom:12px;left:12px;z-index:10;font-size:10px;color:var(--ui-muted);}
-#btn-replay{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);z-index:10;
-  font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;
+#btn-replay{font-family:Arial,Helvetica,sans-serif;font-size:11px;font-weight:700;
   text-transform:uppercase;letter-spacing:.06em;
-  color:#ffffff;background:var(--ui-accent);border:none;border-radius:2px;
-  padding:6px 18px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.15);transition:opacity .1s;}
+  color:#ffffff;background:var(--ui-accent);border:1px solid var(--ui-accent);border-radius:2px;
+  padding:4px 12px;cursor:pointer;transition:opacity .1s;margin-right:4px;}
 #btn-replay:hover{opacity:.85;}
-#btn-replay:disabled{background:#999;cursor:default;box-shadow:none;}
+#btn-replay:disabled{background:#999;border-color:#999;cursor:default;color:#ccc;}
 #contour-tip{position:absolute;display:none;z-index:20;
   background:var(--ui-bg);border:1px solid var(--ui-border);border-radius:2px;
   padding:5px 9px;font-size:11px;font-weight:700;color:var(--ui-text);
@@ -141,7 +140,8 @@ html,body{margin:0;padding:0;overflow:hidden;font-family:Arial,Helvetica,sans-se
 </div>
 
 <div id="toolbar">
-  <button class="snap-btn active" id="btn-free"  onclick="snapView('free')">Free</button>
+<button id="btn-replay" disabled onclick="replayAnimation()">&#9654; Replay</button>
+<button class="snap-btn active" id="btn-free"  onclick="snapView('free')">Free</button>
   <button class="snap-btn"        id="btn-top"   onclick="snapView('top')">Top</button>
   <button class="snap-btn"        id="btn-front" onclick="snapView('front')">Front</button>
   <button class="snap-btn"        id="btn-side"  onclick="snapView('side')">Side</button>
