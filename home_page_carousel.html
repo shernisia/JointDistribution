@@ -63,27 +63,28 @@ html body #crr-demo .carousel-section {
   display: flex !important;
   flex-direction: column !important;
   justify-content: center !important;
-  padding: 56px 24px 72px !important;
+  padding: 24px 24px 48px !important;
   background: #0A2342 !important;
 }
 
 html body #crr-demo .scene {
   width: 100% !important;
-  max-width: 1400px !important;
+  max-width: 1800px !important;
   margin: 0 auto !important;
-  height: 600px !important;
-  perspective: 1400px !important;
+  height: 900px !important;
+  perspective: 1800px !important;
   position: relative !important;
+  overflow: visible !important;
 }
 
 html body #crr-demo .video-card {
   position: absolute !important;
-  width: 870px !important;
-  height: 522px !important;
+  width: 1305px !important;
+  height: 783px !important;
   left: 50% !important;
   top: 50% !important;
-  margin-left: -435px !important;
-  margin-top: -261px !important;
+  margin-left: -652px !important;
+  margin-top: -391px !important;
   transform-style: preserve-3d !important;
   transition: transform 0.55s cubic-bezier(.4,0,.2,1), opacity 0.55s !important;
   cursor: pointer !important;
@@ -277,7 +278,7 @@ const slides = [
 ];
 
 const N = slides.length;
-const RADIUS = 560;
+const RADIUS = 840;
 let current = 0;
 
 const stage = document.getElementById('stage');
