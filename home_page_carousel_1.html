@@ -11,7 +11,7 @@
   --teal:  #1A7A9A;
   --gold:  #C9943A;
   --gold2: #e8b86d;
-  --dark:  #06121f;
+  --dark:  #0A2342;
   --white: #ffffff;
   --card-w: 280px;
   --card-h: 400px;
@@ -29,56 +29,9 @@ body {
   align-items: center;
 }
 
-/* ── Background texture ── */
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  background:
-    radial-gradient(ellipse 80% 50% at 50% 0%, rgba(26,122,154,0.18) 0%, transparent 70%),
-    radial-gradient(ellipse 60% 40% at 80% 80%, rgba(10,35,66,0.5) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
-}
 
-/* ── Header ── */
-.site-header {
-  position: relative;
-  z-index: 10;
-  text-align: center;
-  padding: 3rem 2rem 1.5rem;
-  animation: fadeDown 0.7s ease both;
-}
-@keyframes fadeDown {
-  from { opacity: 0; transform: translateY(-20px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
 
-.eyebrow {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.68rem;
-  letter-spacing: 0.18em;
-  color: var(--teal);
-  text-transform: uppercase;
-  margin-bottom: 0.6rem;
-}
 
-.site-header h1 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(1.8rem, 4vw, 2.8rem);
-  color: var(--white);
-  line-height: 1.15;
-  margin-bottom: 0.5rem;
-}
-.site-header h1 span { color: var(--gold); }
-
-.site-header p {
-  font-size: 0.9rem;
-  color: rgba(255,255,255,0.5);
-  max-width: 500px;
-  margin: 0 auto;
-  line-height: 1.6;
-}
 
 /* ── Carousel scene ── */
 .scene {
@@ -145,7 +98,7 @@ body::before {
 /* Text panel bottom 38% */
 .card-body {
   flex: 1;
-  background: linear-gradient(160deg, #0d2a40 0%, #091e30 100%);
+  background: linear-gradient(160deg, #0d2e4a 0%, #0A2342 100%);
   padding: 0.85rem 1rem 0.9rem;
   display: flex;
   flex-direction: column;
@@ -181,7 +134,7 @@ body::before {
   z-index: 10;
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.65rem;
-  color: rgba(255,255,255,0.28);
+  color: rgba(184,212,232,0.55);
   letter-spacing: 0.1em;
   margin-bottom: 2rem;
   display: flex;
@@ -201,7 +154,7 @@ body::before {
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(6,18,31,0.96);
+  background: rgba(10,35,66,0.97);
   z-index: 1000;
   align-items: center;
   justify-content: center;
@@ -292,12 +245,79 @@ body::before {
 </head>
 <body>
 
-<header class="site-header">
-  <div class="eyebrow">Industrial Actuarial Risk Management</div>
-  <h1>The <span>iARM</span> Framework</h1>
-  <p>From ERP cost data to board-ready financial risk metrics — click any card to explore.</p>
-</header>
+<div id="crr-home" style="background:#0A2342;color:#FFFFFF;margin:0;padding:0;width:100%;display:block;font-family:'EB Garamond','Garamond','Times New Roman',serif;">
 
+  <!-- SECTION 1: HERO HEADER -->
+  <section style="background:#0A2342;text-align:center;padding:64px 24px 60px;border-bottom:1px solid rgba(201,148,58,0.22);position:relative;overflow:hidden;font-family:'EB Garamond','Garamond','Times New Roman',serif;">
+
+    <h1 style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:clamp(42px,7vw,76px);color:#FFFFFF;letter-spacing:-0.01em;line-height:1.05;margin:0 0 8px;font-weight:600;">
+      CostRiskReliability<sup style="color:#C9943A;font-size:0.55em;vertical-align:super;letter-spacing:0;font-family:'EB Garamond','Garamond','Times New Roman',serif;">TM</sup>
+    </h1>
+
+    <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:clamp(14px,1.4vw,17px);letter-spacing:0.22em;text-transform:uppercase;color:#B8D4E8;display:block;margin:0 0 28px;">
+      Industrial Actuarial Risk Management Framework
+    </span>
+
+    <div style="margin-top:28px;">
+      <a href="https://apps.microsoft.com/detail/9p4n2th8klv0?hl=en-us&amp;gl=US&amp;ocid=pdpshare" target="_blank" rel="noopener noreferrer" aria-label="Download CRR from the Microsoft Store" style="font-family:'EB Garamond','Garamond','Times New Roman',serif;display:inline-flex;align-items:center;gap:12px;background:rgba(201,148,58,0.12);border:1px solid #C9943A;border-radius:6px;padding:12px 28px;color:#FFFFFF;text-decoration:none;font-size:21px;letter-spacing:0.04em;">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <rect x="2" y="2" width="9" height="9" fill="#F25022"></rect>
+          <rect x="13" y="2" width="9" height="9" fill="#7FBA00"></rect>
+          <rect x="2" y="13" width="9" height="9" fill="#00A4EF"></rect>
+          <rect x="13" y="13" width="9" height="9" fill="#FFB900"></rect>
+        </svg>
+        Download from the Microsoft Store
+      </a>
+    </div>
+  </section>
+
+  <!-- SECTION 2: BODY COPY + TAGLINES + PROMO -->
+  <section style="background:#0A2342;text-align:center;padding:80px 24px 88px;position:relative;overflow:hidden;font-family:'EB Garamond','Garamond','Times New Roman',serif;">
+
+    <p style="font-family:'EB Garamond','Garamond','Times New Roman',serif;max-width:680px;margin:0 auto 32px;font-size:clamp(21px,2vw,24px);color:#B8D4E8;line-height:1.7;">
+      <strong style="color:#C9943A;font-weight:600;font-family:'EB Garamond','Garamond','Times New Roman',serif;">iARM&#x2122; and the CRR&#x2122; engine quantify unplanned OpEx cost risk.</strong>
+      They model operational event history as a probability distribution and translate it into
+      quantified financial exposure &#x2014; the same language used in reinsurance, credit, and market risk.
+      Every decision made without this framework is implicitly accepting unquantified risk,
+      and in tight-margin industries, that is not a strategy &#x2014; it is a liability.
+    </p>
+
+    <div style="display:flex;justify-content:center;gap:24px;flex-wrap:wrap;margin-bottom:16px;">
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:18px;letter-spacing:0.18em;text-transform:uppercase;color:#C9943A;">Know Your Worth</span>
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:18px;color:rgba(201,148,58,0.35);">&#xB7;</span>
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:18px;letter-spacing:0.18em;text-transform:uppercase;color:#C9943A;">Know Your Risk</span>
+    </div>
+
+    <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;display:block;font-size:clamp(20px,1.8vw,22px);color:#B8D4E8;margin-bottom:32px;">
+      Quantifying Operational Risk for Better Financial Decisions
+    </span>
+
+    <div style="display:flex;justify-content:center;gap:6px 18px;flex-wrap:wrap;margin-bottom:44px;">
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:20px;color:#C9943A;letter-spacing:0.06em;">Quantify</span>
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:20px;color:rgba(201,148,58,0.35);">&#xB7;</span>
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:20px;color:#C9943A;letter-spacing:0.06em;">Prioritize</span>
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:20px;color:rgba(201,148,58,0.35);">&#xB7;</span>
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:20px;color:#C9943A;letter-spacing:0.06em;">Mitigate</span>
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:20px;color:rgba(201,148,58,0.35);">&#xB7;</span>
+      <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:20px;color:#C9943A;letter-spacing:0.06em;">Communicate</span>
+    </div>
+
+    <div style="display:block;width:100%;max-width:520px;margin:0 auto;">
+      <div role="note" style="display:flex;align-items:center;gap:10px;background:rgba(201,148,58,0.10);border:1px solid rgba(201,148,58,0.40);border-radius:6px;padding:10px 18px;width:100%;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#C9943A" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="flex-shrink:0;">
+          <path d="M21.41 11.58l-9-9A2 2 0 0011 2H4a2 2 0 00-2 2v7a2 2 0 00.59 1.42l9 9A2 2 0 0013 22a2 2 0 001.41-.59l7-7A2 2 0 0022 13a2 2 0 00-.59-1.42zM6.5 8a1.5 1.5 0 110-3 1.5 1.5 0 010 3z"></path>
+        </svg>
+        <span style="font-family:'EB Garamond','Garamond','Times New Roman',serif;font-size:18px;color:#C9943A;letter-spacing:0.02em;line-height:1.5;text-align:left;">
+          Attending Reliable Plant &#x27;26? <a href="/contact" style="color:#FFFFFF;text-decoration:underline;text-underline-offset:2px;font-family:'EB Garamond','Garamond','Times New Roman',serif;">Contact us with your work email</a> to receive a promo code before the conference.
+        </span>
+      </div>
+    </div>
+
+  </section>
+
+</div>
+
+<section style="background:#0A2342;width:100%;padding:0 0 60px;border-top:1px solid rgba(201,148,58,0.22);">
 <div class="scene">
   <div class="carousel" id="carousel">
     <div class="card" style="transform: rotateY(0.0deg) translateZ(311px);"
