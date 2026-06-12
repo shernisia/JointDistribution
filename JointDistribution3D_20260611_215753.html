@@ -1,0 +1,1173 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>CRR 3D Joint Distribution</title>
+<style>
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;overflow:hidden;background:#0d1117;
+  font-family:'Garamond','EB Garamond','Times New Roman',serif;}
+#container{width:100vw;height:100vh;position:relative;}
+
+/* ── HUD ── */
+#hud{position:absolute;top:12px;left:12px;z-index:10;
+  background:var(--ui-bg);border:1px solid var(--ui-border);border-radius:4px;
+  padding:16px 18px;min-width:230px;backdrop-filter:blur(6px);}
+#hud-title{font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ui-accent);border-bottom:1px solid var(--ui-border);padding-bottom:7px;margin-bottom:10px;}
+.hud-section{margin-bottom:9px;}
+.hud-label{font-size:18px;letter-spacing:.06em;text-transform:uppercase;color:var(--ui-muted);margin-bottom:3px;}
+.hud-val{font-size:20px;color:var(--ui-text);line-height:1.6;}
+.hud-scope{font-size:18px;color:var(--ui-muted);word-break:break-word;line-height:1.4;}
+#risk-badge{display:inline-block;margin-top:4px;padding:3px 10px;border-radius:2px;
+  font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;}
+
+/* ── Toolbar ── */
+#toolbar{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:10;
+  display:flex;gap:1px;background:var(--ui-bg);border:1px solid var(--ui-border);
+  border-radius:4px;padding:3px;backdrop-filter:blur(6px);}
+.snap-btn{font-family:'Garamond','EB Garamond','Times New Roman',serif;
+  font-size:18px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--ui-muted);background:transparent;border:1px solid transparent;
+  border-radius:3px;padding:6px 16px;cursor:pointer;transition:all .12s;}
+.snap-btn:hover{background:var(--ui-hover);color:var(--ui-text);}
+.snap-btn.active{background:var(--ui-accent-bg);color:var(--ui-accent);border-color:var(--ui-accent);}
+
+/* ── Contour legend ── */
+#legend{position:absolute;top:12px;right:12px;z-index:10;
+  background:var(--ui-bg);border:1px solid var(--ui-border);border-radius:4px;
+  padding:14px 16px;backdrop-filter:blur(6px);}
+#legend-title{font-size:18px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--ui-accent);border-bottom:1px solid var(--ui-border);padding-bottom:6px;margin-bottom:8px;}
+.leg{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:18px;color:var(--ui-muted);}
+.leg:hover{color:var(--ui-text);}
+.sw{width:24px;height:2px;border-radius:1px;flex-shrink:0;}
+
+/* ── Style panel ── */
+#style-panel{position:absolute;top:62px;left:50%;transform:translateX(-50%);
+  z-index:20;background:var(--ui-bg);border:1px solid var(--ui-border);
+  border-radius:4px;padding:18px 20px;box-shadow:0 4px 16px rgba(0,0,0,0.4);
+  display:none;min-width:880px;backdrop-filter:blur(8px);}
+#style-panel h4{margin:0 0 14px;font-size:18px;font-weight:700;
+  text-transform:uppercase;letter-spacing:.08em;color:var(--ui-muted);}
+#style-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.style-card{border:1px solid var(--ui-border);border-radius:3px;padding:12px 14px;
+  cursor:pointer;transition:border-color .12s,background .12s;}
+.style-card:hover{border-color:var(--ui-accent);}
+.style-card.selected{border-color:var(--ui-accent);border-width:2px;}
+.style-card .sc-swatch{height:54px;border-radius:2px;margin-bottom:9px;}
+.style-card .sc-name{font-size:20px;font-weight:700;color:var(--ui-text);margin-bottom:3px;}
+.style-card .sc-desc{font-size:18px;color:var(--ui-muted);}
+
+/* ── Slice panel ── */
+#slice-panel{position:absolute;bottom:48px;right:12px;z-index:10;
+  background:var(--ui-bg);border:1px solid var(--ui-border);border-radius:4px;
+  padding:12px 16px;min-width:300px;backdrop-filter:blur(6px);font-size:18px;}
+#slice-panel h3{margin:0 0 10px;font-size:18px;font-weight:700;color:var(--ui-muted);
+  text-transform:uppercase;letter-spacing:.06em;
+  border-bottom:1px solid var(--ui-border);padding-bottom:5px;}
+.srow{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.srow label{color:var(--ui-muted);min-width:80px;font-size:18px;font-weight:700;text-transform:uppercase;}
+.srow input[type=range]{flex:1;accent-color:var(--ui-accent);}
+.srow span{min-width:72px;text-align:right;font-weight:700;color:var(--ui-text);
+  font-size:18px;font-variant-numeric:tabular-nums;}
+.srow select{flex:1;font-size:18px;padding:4px 6px;
+  background:var(--ui-bg);color:var(--ui-text);border:1px solid var(--ui-border);border-radius:2px;}
+#slice-readout{margin-top:8px;padding:8px 10px;background:var(--ui-hover);
+  border-radius:2px;font-size:18px;line-height:1.8;color:var(--ui-muted);
+  border-left:3px solid var(--ui-accent);}
+#slice-toggle{font-size:18px;font-weight:700;font-family:'Garamond','Times New Roman',serif;
+  color:#fff;background:var(--ui-accent);border:none;border-radius:2px;
+  padding:5px 12px;cursor:pointer;margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em;}
+#slice-toggle:hover{opacity:.85;}
+#slice-toggle.off{color:var(--ui-muted);background:var(--ui-hover);border:1px solid var(--ui-border);}
+
+/* ── Footer ── */
+#footer{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);z-index:10;
+  font-size:18px;letter-spacing:.06em;color:var(--ui-muted);text-transform:uppercase;}
+</style>
+</head>
+<body>
+<div id="container"></div>
+
+<!-- HUD -->
+<div id="hud">
+  <div id="hud-title">CRR Joint Distribution</div>
+  <div class="hud-section">
+    <div class="hud-label">Scope</div>
+    <div class="hud-scope">Portfolio — Tank Farm</div>
+  </div>
+  <div class="hud-section">
+    <div class="hud-label">Poisson Frequency</div>
+    <div class="hud-val">&#955; = 76.052</div>
+  </div>
+  <div class="hud-section">
+    <div class="hud-label">Lognormal Severity</div>
+    <div class="hud-val">&#956; = 12.1942</div>
+    <div class="hud-val">&#963; = 0.6488</div>
+    <div class="hud-val">CV = 0.7234</div>
+  </div>
+  <div class="hud-section">
+    <div class="hud-label">Risk Focus</div>
+    <div id="risk-badge">&#8212;</div>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div id="toolbar">
+  <button class="snap-btn view-btn active" id="btn-free"  onclick="snapView('free')">Free</button>
+  <button class="snap-btn view-btn"        id="btn-top"   onclick="snapView('top')">Top</button>
+  <button class="snap-btn view-btn"        id="btn-front" onclick="snapView('front')">Front</button>
+  <button class="snap-btn view-btn"        id="btn-side"  onclick="snapView('side')">Side</button>
+  <button class="snap-btn view-btn"        id="btn-peak"  onclick="snapView('peak')">Peak</button>
+  <button class="snap-btn"        id="btn-lin"   onclick="setAxisMode('linear')" style="border-left:1px solid var(--ui-border);margin-left:4px;padding-left:14px;">Linear</button>
+  <button class="snap-btn active" id="btn-log"   onclick="setAxisMode('log')">Log</button>
+  <button class="snap-btn"        id="btn-style" onclick="toggleStylePanel()" style="border-left:1px solid var(--ui-border);margin-left:4px;padding-left:14px;">&#9664; Style</button>
+</div>
+
+<!-- Style picker -->
+<div id="style-panel">
+  <h4>Rendering Style</h4>
+  <div id="style-grid">
+    <div class="style-card selected" id="sc-cad" onclick="applyStyle('cad')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#2266cc,#4daa57,#f5c518,#cc3300);"></div>
+      <div class="sc-name">CAD / MATLAB</div>
+      <div class="sc-desc">Jet colormap, Phong shading.</div>
+    </div>
+    <div class="style-card" id="sc-cel" onclick="applyStyle('cel')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#5DBE6E,#FFD700,#FF9500,#E84040);border:3px solid #000;"></div>
+      <div class="sc-name">Cel / Toon</div>
+      <div class="sc-desc">Discrete bands, ink outlines.</div>
+    </div>
+    <div class="style-card" id="sc-wire" onclick="applyStyle('wire')">
+      <div class="sc-swatch" style="background:#001f3f;background-image:repeating-linear-gradient(0deg,transparent,transparent 5px,rgba(0,255,255,0.4) 5px,rgba(0,255,255,0.4) 6px),repeating-linear-gradient(90deg,transparent,transparent 5px,rgba(0,255,255,0.4) 5px,rgba(0,255,255,0.4) 6px);"></div>
+      <div class="sc-name">Wireframe</div>
+      <div class="sc-desc">Tron-style neon on dark.</div>
+    </div>
+    <div class="style-card" id="sc-noir" onclick="applyStyle('noir')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#0a0a0a,#1a1a1a,#2a2a2a);"></div>
+      <div class="sc-name">Noir</div>
+      <div class="sc-desc">Sharp white highlight, dramatic shadows.</div>
+    </div>
+    <div class="style-card" id="sc-retro" onclick="applyStyle('retro')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#330066,#6600cc,#cc00cc,#ff6600);"></div>
+      <div class="sc-name">Low-Poly Retro</div>
+      <div class="sc-desc">Flat-shaded facets, PS1 palette.</div>
+    </div>
+    <div class="style-card" id="sc-neon" onclick="applyStyle('neon')">
+      <div class="sc-swatch" style="background:#0a0a1a;background-image:radial-gradient(ellipse at 50% 50%,rgba(255,0,128,0.5),rgba(0,200,255,0.3),transparent 70%);"></div>
+      <div class="sc-name">Neon / Synthwave</div>
+      <div class="sc-desc">Hot pink-to-cyan, glowing contours.</div>
+    </div>
+    <div class="style-card" id="sc-terrain" onclick="applyStyle('terrain')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#2d6a2d,#7a9e3b,#c8a84b,#a0522d,#e8e8e0);"></div>
+      <div class="sc-name">Terrain</div>
+      <div class="sc-desc">Topographic relief, green to snow.</div>
+    </div>
+    <div class="style-card" id="sc-thermal" onclick="applyStyle('thermal')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#0a0000,#660000,#cc3300,#ff8800,#ffff00,#ffffff);"></div>
+      <div class="sc-name">Thermal / Infrared</div>
+      <div class="sc-desc">FLIR heat ramp, black to white-hot.</div>
+    </div>
+    <div class="style-card" id="sc-blueprint" onclick="applyStyle('blueprint')">
+      <div class="sc-swatch" style="background:#040c24;background-image:repeating-linear-gradient(0deg,transparent,transparent 7px,rgba(68,136,255,0.3) 7px,rgba(68,136,255,0.3) 8px),repeating-linear-gradient(90deg,transparent,transparent 7px,rgba(68,136,255,0.3) 7px,rgba(68,136,255,0.3) 8px);"></div>
+      <div class="sc-name">Blueprint</div>
+      <div class="sc-desc">White geometry on engineering navy.</div>
+    </div>
+    <div class="style-card" id="sc-holo" onclick="applyStyle('holo')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#ff88ff,#88ffee,#88aaff,#ffaa88);"></div>
+      <div class="sc-name">Holographic</div>
+      <div class="sc-desc">Iridescent pearl, sci-fi console.</div>
+    </div>
+    <div class="style-card" id="sc-glass" onclick="applyStyle('glass')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,rgba(136,204,238,0.3),rgba(136,204,238,0.7));border:1px solid #88ccee;"></div>
+      <div class="sc-name">Glass / Crystal</div>
+      <div class="sc-desc">Translucent body, contours shine through.</div>
+    </div>
+    <div class="style-card" id="sc-lava" onclick="applyStyle('lava')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#1a0505,#661100,#cc4400,#ff8833);"></div>
+      <div class="sc-name">Molten / Lava</div>
+      <div class="sc-desc">Pulsing ember glow at the peak.</div>
+    </div>
+    <div class="style-card" id="sc-vapor" onclick="applyStyle('vapor')">
+      <div class="sc-swatch" style="background:linear-gradient(180deg,#ff00cc,#6600aa,#0a0020);"></div>
+      <div class="sc-name">Vaporwave</div>
+      <div class="sc-desc">Magenta surface, infinite retro grid.</div>
+    </div>
+    <div class="style-card" id="sc-sketch" onclick="applyStyle('sketch')">
+      <div class="sc-swatch" style="background:#f7f4ec;background-image:repeating-linear-gradient(0deg,transparent,transparent 6px,rgba(40,40,40,0.35) 6px,rgba(40,40,40,0.35) 7px);"></div>
+      <div class="sc-name">Pencil Sketch</div>
+      <div class="sc-desc">Engineering notebook, hand-drawn lines.</div>
+    </div>
+    <div class="style-card" id="sc-aurora" onclick="applyStyle('aurora')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#042010,#00aa88,#44ddaa,#8844ff);"></div>
+      <div class="sc-name">Aurora</div>
+      <div class="sc-desc">Teal-violet glow under a starfield.</div>
+    </div>
+    <div class="style-card" id="sc-xray" onclick="applyStyle('xray')">
+      <div class="sc-swatch" style="background:#020812;background-image:radial-gradient(ellipse at 50% 60%,rgba(102,170,255,0.6),rgba(102,170,255,0.15) 60%,transparent);"></div>
+      <div class="sc-name">X-Ray</div>
+      <div class="sc-desc">Additive ghost surface, edges glow.</div>
+    </div>
+    <div class="style-card" id="sc-photo" onclick="applyStyle('photo')">
+      <div class="sc-swatch" style="background:linear-gradient(135deg,#f6f5f2,#dadad6 38%,#ffffff 48%,#c9c8c3 70%,#e8d9b8);"></div>
+      <div class="sc-name">Studio / Photoreal</div>
+      <div class="sc-desc">Porcelain PBR, soft shadows, studio light.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Contour legend -->
+<div id="legend">
+  <div id="legend-title">Annual Loss Contours</div>
+  <div class="leg"><span class="sw" style="background:#22c55e"></span>P10 &mdash; 14,957,256</div>
+  <div class="leg"><span class="sw" style="background:#3b82f6"></span>P50 &mdash; 18,431,965</div>
+  <div class="leg"><span class="sw" style="background:#eab308"></span>P80 &mdash; 21,022,975</div>
+  <div class="leg"><span class="sw" style="background:#ef4444"></span>P95 &mdash; 23,615,882</div>
+  <div class="leg"><span class="sw" style="background:#06b6d4"></span>EAL &mdash; 18,589,158</div>
+  <div class="leg"><span class="sw" style="background:#f97316"></span>TVaR80 &mdash; 22,817,266</div>
+  <div class="leg"><span class="sw" style="background:#a855f7"></span>TVaR95 &mdash; 25,014,647</div>
+</div>
+
+<!-- Slice panel -->
+<div id="slice-panel">
+  <h3>Cross-Section Slice</h3>
+  <button id="slice-toggle" onclick="toggleSlice()">Slice On</button>
+  <div class="srow">
+    <label>Axis</label>
+    <select id="slice-axis" onchange="updateSlice()">
+      <option value="k">Event Count (k)</option>
+      <option value="cost">Per-Event Cost</option>
+      <option value="loss">Annual Loss</option>
+    </select>
+  </div>
+  <div class="srow">
+    <label id="slice-lbl">k</label>
+    <input type="range" id="slice-slider" min="0" max="30" value="10" step="1" oninput="updateSlice()">
+    <span id="slice-out">10</span>
+  </div>
+  <div id="slice-readout">Move slider to cut through surface.</div>
+</div>
+
+<div id="footer">Drag to rotate &nbsp;&middot;&nbsp; Scroll to zoom &nbsp;&middot;&nbsp; Right-drag to pan</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+// ── CSS variable themes ──
+var THEMES = {
+  light: {
+    '--ui-bg':'rgba(255,255,255,0.93)','--ui-border':'#b0b8c0',
+    '--ui-text':'#1a1a1a','--ui-muted':'#666','--ui-hover':'#f0f2f4',
+    '--ui-accent':'#cc3300','--ui-accent-bg':'#fdf5f3','scene-bg':'#e8ecef'
+  },
+  dark: {
+    '--ui-bg':'rgba(13,17,23,0.93)','--ui-border':'#2a3a4a',
+    '--ui-text':'#c9d1d9','--ui-muted':'#8b949e','--ui-hover':'#161b22',
+    '--ui-accent':'#4a9eff','--ui-accent-bg':'#0f2a4a','scene-bg':'#0d1117'
+  },
+  noir: {
+    '--ui-bg':'rgba(10,10,10,0.96)','--ui-border':'#333',
+    '--ui-text':'#ddd','--ui-muted':'#888','--ui-hover':'#1a1a1a',
+    '--ui-accent':'#ffffff','--ui-accent-bg':'#1a1a1a','scene-bg':'#050505'
+  },
+  neon: {
+    '--ui-bg':'rgba(8,4,20,0.96)','--ui-border':'#440066',
+    '--ui-text':'#ff88ff','--ui-muted':'#aa44aa','--ui-hover':'#120024',
+    '--ui-accent':'#ff0088','--ui-accent-bg':'#2a0030','scene-bg':'#060012'
+  },
+  terrain: {
+    '--ui-bg':'rgba(255,255,255,0.92)','--ui-border':'#c8bfb0',
+    '--ui-text':'#2C2C2A','--ui-muted':'#6b5f50','--ui-hover':'#f5f0ea',
+    '--ui-accent':'#5B4A2E','--ui-accent-bg':'#f5efe0','scene-bg':'#c8d8e8'
+  },
+  thermal: {
+    '--ui-bg':'rgba(8,4,4,0.95)','--ui-border':'#441100',
+    '--ui-text':'#ffcc88','--ui-muted':'#aa6633','--ui-hover':'#1a0800',
+    '--ui-accent':'#ff4400','--ui-accent-bg':'#2a0800','scene-bg':'#080200'
+  },
+  blueprint: {
+    '--ui-bg':'rgba(4,12,36,0.97)','--ui-border':'#1a3a6a',
+    '--ui-text':'#c8dcf8','--ui-muted':'#5a7aaa','--ui-hover':'#0a1830',
+    '--ui-accent':'#4488ff','--ui-accent-bg':'#0a1830','scene-bg':'#040c24'
+  },
+  holo: {
+    '--ui-bg':'rgba(8,10,20,0.95)','--ui-border':'#3a4a7a',
+    '--ui-text':'#cce6ff','--ui-muted':'#7a8ab0','--ui-hover':'#10142a',
+    '--ui-accent':'#88ffee','--ui-accent-bg':'#0a2a2a','scene-bg':'#05060f'
+  },
+  glass: {
+    '--ui-bg':'rgba(10,16,24,0.92)','--ui-border':'#2a4a5a',
+    '--ui-text':'#cfe8f5','--ui-muted':'#7a9aaa','--ui-hover':'#101a24',
+    '--ui-accent':'#88ccee','--ui-accent-bg':'#0a2030','scene-bg':'#0a1018'
+  },
+  vapor: {
+    '--ui-bg':'rgba(10,0,32,0.95)','--ui-border':'#660099',
+    '--ui-text':'#ff99ee','--ui-muted':'#9955bb','--ui-hover':'#180034',
+    '--ui-accent':'#00ffee','--ui-accent-bg':'#002a2a','scene-bg':'#0a0020'
+  },
+  sketch: {
+    '--ui-bg':'rgba(247,244,236,0.95)','--ui-border':'#b8b0a0',
+    '--ui-text':'#2a2a2a','--ui-muted':'#777066','--ui-hover':'#edeae0',
+    '--ui-accent':'#444444','--ui-accent-bg':'#e8e4d8','scene-bg':'#f7f4ec'
+  },
+  aurora: {
+    '--ui-bg':'rgba(4,8,16,0.95)','--ui-border':'#1a4a3a',
+    '--ui-text':'#bdf0dd','--ui-muted':'#5a9a82','--ui-hover':'#081420',
+    '--ui-accent':'#44ddaa','--ui-accent-bg':'#0a2a20','scene-bg':'#040810'
+  },
+  xray: {
+    '--ui-bg':'rgba(2,8,18,0.95)','--ui-border':'#1a3a5a',
+    '--ui-text':'#aaccee','--ui-muted':'#5a7a9a','--ui-hover':'#081424',
+    '--ui-accent':'#66aaff','--ui-accent-bg':'#0a1a30','scene-bg':'#020812'
+  },
+  photo: {
+    '--ui-bg':'rgba(250,250,249,0.92)','--ui-border':'#c6c4bf',
+    '--ui-text':'#222222','--ui-muted':'#7a766e','--ui-hover':'#f0efec',
+    '--ui-accent':'#8a6d3b','--ui-accent-bg':'#f4eee2','scene-bg':'#e2e5e9'
+  }
+};
+
+function setTheme(name) {
+  var t = THEMES[name] || THEMES.dark;
+  var root = document.documentElement;
+  for (var k in t) {
+    if (k !== 'scene-bg') root.style.setProperty(k, t[k]);
+  }
+  if (scene) scene.background = new THREE.Color(t['scene-bg'] || '#0d1117');
+}
+
+var model = {
+  lambda: 76.052,
+  mu:     12.194183829439703,
+  sigma:  0.6487548434914309,
+  eal:    18589157.668956213,
+  tvar80: 22817265.766863182,
+  tvar95: 25014647.366554134,
+  p10:    14957255.719287666,
+  p50:    18431964.722528927,
+  p80:    21022974.689944964,
+  p95:    23615882.269364554
+};
+
+// ── Math ──
+function poissonPmf(k, lam) {
+  if (lam <= 0) return k === 0 ? 1 : 0;
+  var lp = -lam + k * Math.log(lam);
+  for (var i = 1; i <= k; i++) lp -= Math.log(i);
+  return isFinite(lp) ? Math.exp(lp) : 0;
+}
+function lognormalPdf(x, mu, sigma) {
+  if (x <= 0 || sigma <= 0) return 0;
+  var z = (Math.log(x) - mu) / sigma;
+  return Math.exp(-0.5*z*z) / (x*sigma*Math.sqrt(2*Math.PI));
+}
+
+// ── Axis windows: wide enough edges are near-zero, surface self-seals ──
+var kSigma = Math.sqrt(Math.max(model.lambda, 1));
+var kLo    = Math.max(0, Math.floor(model.lambda - 5.5 * kSigma));
+var kHi    = Math.ceil(model.lambda + 5.5 * kSigma);
+var kRange = kHi - kLo;
+var axisMode = 'log'; // 'log' = centered Gaussian view, 'linear' = classic skewed lognormal view
+var costMin, costMax, costRange, logMin, logMax, logRange;
+function computeAxisWindow(){
+  if(axisMode==='log'){
+    costMin=Math.exp(model.mu-4.5*model.sigma);
+    costMax=Math.exp(model.mu+4.5*model.sigma);
+  }else{
+    costMin=Math.exp(model.mu-4.0*model.sigma);
+    costMax=Math.exp(model.mu+2.6*model.sigma); /* ~severity P99.5; skirt seals the clipped tail */
+  }
+  costRange=costMax-costMin;
+  logMin=Math.log(costMin); logMax=Math.log(costMax); logRange=logMax-logMin;
+}
+computeAxisWindow();
+function costAtFrac(f){ return axisMode==='log' ? Math.exp(logMin+f*logRange) : (costMin+f*costRange); }
+function jac(c){ return axisMode==='log' ? c : 1; }
+
+var SCENE_W = 160, SCENE_D = 140, TARGET_H = 40;
+var K_STEPS = 120, COST_STEPS = 160;
+
+function kToX(k)  { return ((k - kLo) / kRange) * SCENE_W; }
+function costToZ(c) {
+  var f = axisMode==='log' ? (Math.log(c)-logMin)/logRange : (c-costMin)/costRange;
+  return -f * SCENE_D;
+}
+
+// ── Analytical density grid (mode-aware) ──
+var densityGrid = [], fMax = 0;
+function buildDensityGrid(){
+  densityGrid = []; fMax = 0;
+  for (var ki = 0; ki < K_STEPS; ki++) {
+    var kVal = kLo + (ki/(K_STEPS-1))*kRange;
+    var kF0 = Math.floor(kVal), kC0 = Math.min(kF0+1,kHi), kFr0 = kVal-kF0;
+    var pk0 = poissonPmf(kF0,model.lambda)*(1-kFr0)+poissonPmf(kC0,model.lambda)*kFr0;
+    var row = [];
+    for (var cj = 0; cj < COST_STEPS; cj++) {
+      var cost = costAtFrac(cj/(COST_STEPS-1));
+      var f = pk0 * lognormalPdf(cost, model.mu, model.sigma) * jac(cost);
+      if (f > fMax) fMax = f;
+      row.push({k:kVal, cost:cost, f:f});
+    }
+    densityGrid.push(row);
+  }
+}
+buildDensityGrid();
+
+// ── Color maps ──
+function jetColor(t)     { var r,g,b; if(t<0.125){r=0;g=0;b=0.5+t*4;}else if(t<0.375){r=0;g=(t-0.125)*4;b=1;}else if(t<0.625){r=(t-0.375)*4;g=1;b=1-(t-0.375)*4;}else if(t<0.875){r=1;g=1-(t-0.625)*4;b=0;}else{r=1-(t-0.875)*4;g=0;b=0;} return[Math.max(0,Math.min(1,r)),Math.max(0,Math.min(1,g)),Math.max(0,Math.min(1,b))]; }
+function celColor(t)     { if(t>0.90)return[1,1,1]; if(t>0.70)return[0.91,0.25,0.25]; if(t>0.45)return[1,0.58,0]; if(t>0.22)return[1,0.84,0]; return[0.36,0.75,0.43]; }
+function noirColor(t)    { var v=t*t; return[v,v,v]; }
+function neonColor(t)    { return[1-t*0.6,t*0.8,t]; }
+function retroColor(t)   { var p=[[0.1,0.05,0.3],[0.2,0.1,0.6],[0.1,0.5,0.2],[0.7,0.6,0.1],[0.8,0.2,0.1]]; return p[Math.min(Math.floor(t*5),4)]; }
+function terrainColor(t) { var s=[[0,[0.12,0.32,0.12]],[0.15,[0.22,0.45,0.18]],[0.30,[0.40,0.58,0.22]],[0.45,[0.62,0.68,0.28]],[0.58,[0.72,0.58,0.32]],[0.70,[0.60,0.42,0.25]],[0.82,[0.50,0.36,0.28]],[0.91,[0.75,0.70,0.65]],[1.00,[0.95,0.93,0.90]]]; for(var i=0;i<s.length-1;i++){if(t>=s[i][0]&&t<=s[i+1][0]){var f=(t-s[i][0])/(s[i+1][0]-s[i][0]);return[s[i][1][0]+f*(s[i+1][1][0]-s[i][1][0]),s[i][1][1]+f*(s[i+1][1][1]-s[i][1][1]),s[i][1][2]+f*(s[i+1][1][2]-s[i][1][2])];}} return[0.95,0.93,0.90]; }
+function thermalColor(t) { if(t<0.25)return[t*4*0.8,0,0]; if(t<0.5){var f=(t-0.25)*4;return[0.8+f*0.2,f*0.4,0];} if(t<0.75){var f=(t-0.5)*4;return[1,0.4+f*0.6,f*0.2];} var f=(t-0.75)*4;return[1,1,0.2+f*0.8]; }
+function blueprintColor(t){ var v=0.55+t*0.45; return[v,v,v]; }
+function holoColor(t)    { return [0.5+0.5*Math.sin(t*6.28), 0.5+0.5*Math.sin(t*6.28+2.09), 0.5+0.5*Math.sin(t*6.28+4.19)]; }
+function lavaColor(t)    { if(t<0.3)return[0.05+t*0.5,0.02,0.02]; if(t<0.6){var f=(t-0.3)*3.33;return[0.6+f*0.4,f*0.25,0];} var f2=(t-0.6)*2.5;return[1,0.25+f2*0.6,f2*0.3]; }
+function vaporColor(t)   { if(t<0.5){var f=t*2;return[0.3+f*0.5,0.05,0.4+f*0.4];} var f3=(t-0.5)*2;return[0.8+f3*0.2,0.05+f3*0.6,0.8-f3*0.2]; }
+function sketchColor(t)  { var v=0.92-t*0.45; return[v,v,v*0.97]; }
+function auroraColor(t)  { if(t<0.4)return[0,0.3+t,0.4+t*0.5]; if(t<0.7){var f=(t-0.4)*3.33;return[f*0.4,0.7+f*0.2,0.6];} var f4=(t-0.7)*3.33;return[0.4+f4*0.5,0.9-f4*0.3,0.6+f4*0.3]; }
+function photoColor(t)   { var f=Math.pow(t,1.4); return [0.93+f*0.06, 0.94-f*0.08, 0.96-f*0.34]; }
+
+// ── Build geometry ──
+var positions=[], heights=[], colors=[], indices=[];
+var vertexMeta=[], peakX=0, peakY=0, peakZ=0;
+
+for (var vi = 0; vi < K_STEPS; vi++) {
+  for (var vj = 0; vj < COST_STEPS; vj++) {
+    var cell = densityGrid[vi][vj];
+    var h = (cell.f / Math.max(fMax,1e-300)) * TARGET_H;
+    heights.push(h);
+    positions.push(kToX(cell.k), 0, costToZ(cell.cost));
+    var tc = Math.pow(h/TARGET_H, 0.55);
+    var col = jetColor(tc);
+    colors.push(col[0],col[1],col[2]);
+    vertexMeta.push({t:tc});
+    if (h > peakY) { peakY=h; peakX=kToX(cell.k); peakZ=costToZ(cell.cost); }
+  }
+}
+for (var ii=0; ii<K_STEPS-1; ii++) {
+  for (var ij=0; ij<COST_STEPS-1; ij++) {
+    var a=ii*COST_STEPS+ij, b=(ii+1)*COST_STEPS+ij, c=(ii+1)*COST_STEPS+(ij+1), d=ii*COST_STEPS+(ij+1);
+    indices.push(a,b,d, b,c,d);
+  }
+}
+
+// ── Skirt: seal all 4 perimeter edges to y=0 ──
+var skirtBase = positions.length / 3; // index of first skirt vertex
+
+// For each perimeter vertex, add a ground-level twin at y=0
+// Edge 0: ki=0, all cj (front edge, kLo side)
+for (var sj=0; sj<COST_STEPS; sj++) {
+  var idx0 = 0*COST_STEPS+sj;
+  positions.push(positions[idx0*3], 0, positions[idx0*3+2]);
+  heights.push(0); colors.push(0.05,0.07,0.1); vertexMeta.push({t:0});
+}
+// Edge 1: ki=K_STEPS-1, all cj (back edge, kHi side)
+for (var sj=0; sj<COST_STEPS; sj++) {
+  var idx1 = (K_STEPS-1)*COST_STEPS+sj;
+  positions.push(positions[idx1*3], 0, positions[idx1*3+2]);
+  heights.push(0); colors.push(0.05,0.07,0.1); vertexMeta.push({t:0});
+}
+// Edge 2: cj=0, all ki (left edge, costMin side)
+for (var si=0; si<K_STEPS; si++) {
+  var idx2 = si*COST_STEPS+0;
+  positions.push(positions[idx2*3], 0, positions[idx2*3+2]);
+  heights.push(0); colors.push(0.05,0.07,0.1); vertexMeta.push({t:0});
+}
+// Edge 3: cj=COST_STEPS-1, all ki (right edge, costMax side)
+for (var si=0; si<K_STEPS; si++) {
+  var idx3 = si*COST_STEPS+(COST_STEPS-1);
+  positions.push(positions[idx3*3], 0, positions[idx3*3+2]);
+  heights.push(0); colors.push(0.05,0.07,0.1); vertexMeta.push({t:0});
+}
+
+// Stitch skirt quads: top vertex (surface) + bottom twin (skirt)
+// Edge 0 skirt (ki=0)
+for (var sj=0; sj<COST_STEPS-1; sj++) {
+  var top0=0*COST_STEPS+sj, top1=0*COST_STEPS+sj+1;
+  var bot0=skirtBase+sj,    bot1=skirtBase+sj+1;
+  indices.push(top0,bot0,top1, bot0,bot1,top1);
+}
+// Edge 1 skirt (ki=K_STEPS-1)
+var e1base = skirtBase+COST_STEPS;
+for (var sj=0; sj<COST_STEPS-1; sj++) {
+  var top0=(K_STEPS-1)*COST_STEPS+sj, top1=(K_STEPS-1)*COST_STEPS+sj+1;
+  var bot0=e1base+sj, bot1=e1base+sj+1;
+  indices.push(top0,top1,bot0, bot0,top1,bot1);
+}
+// Edge 2 skirt (cj=0)
+var e2base = skirtBase+COST_STEPS*2;
+for (var si=0; si<K_STEPS-1; si++) {
+  var top0=si*COST_STEPS+0,     top1=(si+1)*COST_STEPS+0;
+  var bot0=e2base+si,           bot1=e2base+si+1;
+  indices.push(top0,top1,bot0, bot0,top1,bot1);
+}
+// Edge 3 skirt (cj=COST_STEPS-1)
+var e3base = skirtBase+COST_STEPS*2+K_STEPS;
+for (var si=0; si<K_STEPS-1; si++) {
+  var top0=si*COST_STEPS+(COST_STEPS-1),     top1=(si+1)*COST_STEPS+(COST_STEPS-1);
+  var bot0=e3base+si,                        bot1=e3base+si+1;
+  indices.push(top0,bot0,top1, bot0,bot1,top1);
+}
+
+var geometry = new THREE.BufferGeometry();
+geometry.setIndex(indices);
+geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+geometry.setAttribute('color',    new THREE.Float32BufferAttribute(colors,3));
+geometry.computeVertexNormals();
+
+// ── Toon gradient map ──
+var gradMap = (function(){
+  var cv=document.createElement('canvas'); cv.width=4; cv.height=1;
+  var ctx=cv.getContext('2d'), gd=ctx.createLinearGradient(0,0,4,0);
+  gd.addColorStop(0,'#404040'); gd.addColorStop(0.25,'#404040');
+  gd.addColorStop(0.25,'#888'); gd.addColorStop(0.5,'#888');
+  gd.addColorStop(0.5,'#C0C0C0'); gd.addColorStop(0.75,'#C0C0C0');
+  gd.addColorStop(0.75,'#fff'); gd.addColorStop(1,'#fff');
+  ctx.fillStyle=gd; ctx.fillRect(0,0,4,1);
+  var tex=new THREE.CanvasTexture(cv);
+  tex.magFilter=THREE.NearestFilter; tex.minFilter=THREE.NearestFilter;
+  return tex;
+})();
+
+// ── Scene ──
+var scene = new THREE.Scene();
+setTheme('dark');
+
+var cx=SCENE_W*0.5, cy=TARGET_H*0.3, cz=-SCENE_D*0.5;
+var camera = new THREE.PerspectiveCamera(45, window.innerWidth/window.innerHeight, 0.1, 10000);
+camera.position.set(cx, TARGET_H*2.4, SCENE_D*1.2);
+camera.lookAt(cx, cy, cz);
+
+var renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.getElementById('container').appendChild(renderer.domElement);
+
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.06;
+controls.target.set(cx,cy,cz); controls.update();
+
+var ambientLight = new THREE.AmbientLight(0xffffff,0.7); scene.add(ambientLight);
+var keyLight = new THREE.DirectionalLight(0xffffff,0.8); keyLight.position.set(-80,160,60); scene.add(keyLight);
+var fillLight = new THREE.DirectionalLight(0x4a9eff,0.2); fillLight.position.set(80,40,-80); scene.add(fillLight);
+
+// ── Surface + outline meshes ──
+var surfMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({
+  vertexColors:true, side:THREE.DoubleSide, shininess:22,
+  specular:new THREE.Color(0.1,0.1,0.12)
+}));
+scene.add(surfMesh);
+
+var outlineMesh = new THREE.Mesh(geometry.clone(), new THREE.MeshBasicMaterial({
+  color:0x000000, side:THREE.BackSide
+}));
+outlineMesh.scale.set(1.018,1.025,1.018);
+outlineMesh.visible = false;
+scene.add(outlineMesh);
+
+var wireMesh = new THREE.LineSegments(
+  new THREE.BufferGeometry(),
+  new THREE.LineBasicMaterial({color:0x00ffff,transparent:true,opacity:0.7})
+);
+var wireGeoBuilt = false;
+function ensureWireGeo() {
+  if (!wireGeoBuilt) { wireMesh.geometry.dispose(); wireMesh.geometry=new THREE.WireframeGeometry(geometry); wireGeoBuilt=true; }
+}
+wireMesh.visible=false; scene.add(wireMesh);
+
+// ── Sparse CAD grid lines ──
+var cadLines=[], wStep=10;
+var cadMat=new THREE.LineBasicMaterial({color:0x333333,transparent:true,opacity:0.18});
+for (var wi=0; wi<K_STEPS; wi+=wStep) {
+  var pts=[]; for(var wj=0;wj<COST_STEPS;wj++) pts.push(new THREE.Vector3(kToX(densityGrid[wi][wj].k),0,costToZ(densityGrid[wi][wj].cost)));
+  var wg=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),cadMat); cadLines.push(wg); scene.add(wg);
+}
+for (var wj2=0; wj2<COST_STEPS; wj2+=wStep) {
+  var pts2=[]; for(var wi2=0;wi2<K_STEPS;wi2++) pts2.push(new THREE.Vector3(kToX(densityGrid[wi2][wj2].k),0,costToZ(densityGrid[wi2][wj2].cost)));
+  var wg2=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts2),cadMat); cadLines.push(wg2); scene.add(wg2);
+}
+
+// ── Ground ──
+var ground = new THREE.Mesh(
+  new THREE.PlaneGeometry(SCENE_W+24, SCENE_D+24),
+  new THREE.MeshLambertMaterial({color:0x111820})
+);
+ground.rotation.x=-Math.PI/2; ground.position.set(cx,-0.1,cz); scene.add(ground);
+
+// ── Lazy assets for new styles ──
+var stars=null;
+function ensureStars(){
+  if(stars)return;
+  var sPos=[];
+  for(var st=0;st<400;st++){
+    var th=Math.random()*Math.PI*2, ph=Math.random()*Math.PI*0.45;
+    sPos.push(cx+500*Math.cos(th)*Math.cos(ph), 15+300*Math.sin(ph), cz+500*Math.sin(th)*Math.cos(ph));
+  }
+  var sg=new THREE.BufferGeometry();
+  sg.setAttribute('position',new THREE.Float32BufferAttribute(sPos,3));
+  stars=new THREE.Points(sg,new THREE.PointsMaterial({color:0xffffff,size:1.4,transparent:true,opacity:0.85}));
+  scene.add(stars);
+}
+var vaporGrid=null, horizonLine=null;
+function ensureVapor(){
+  if(vaporGrid)return;
+  vaporGrid=new THREE.GridHelper(700,70,0xff00cc,0x550088);
+  vaporGrid.position.set(cx,-0.2,cz);
+  scene.add(vaporGrid);
+  horizonLine=new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(cx-350,0.1,cz-340),new THREE.Vector3(cx+350,0.1,cz-340)]),
+    new THREE.LineBasicMaterial({color:0x00ffee,transparent:true,opacity:0.9}));
+  scene.add(horizonLine);
+}
+var penLines=[], penBuilt=false;
+function ensurePenLines(){
+  if(penBuilt)return; penBuilt=true;
+  var pMat=new THREE.LineBasicMaterial({color:0x2a2a2a,transparent:true,opacity:0.5});
+  for(var pi=0;pi<K_STEPS;pi+=4){
+    var pp=[]; for(var pj=0;pj<COST_STEPS;pj++) pp.push(new THREE.Vector3(kToX(densityGrid[pi][pj].k),heights[pi*COST_STEPS+pj],costToZ(densityGrid[pi][pj].cost)));
+    var pl=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pp),pMat); penLines.push(pl); scene.add(pl);
+  }
+  for(var pj2=0;pj2<COST_STEPS;pj2+=4){
+    var pp2=[]; for(var pi2=0;pi2<K_STEPS;pi2++) pp2.push(new THREE.Vector3(kToX(densityGrid[pi2][pj2].k),heights[pi2*COST_STEPS+pj2],costToZ(densityGrid[pi2][pj2].cost)));
+    var pl2=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pp2),pMat); penLines.push(pl2); scene.add(pl2);
+  }
+}
+var lavaPulse=false;
+
+// ── Photoreal assets (lazy) ──
+var photoEnv=null, photoBg=null, photoOn=false, shadowReady=false;
+function ensurePhotoEnv(){
+  if(photoEnv)return;
+  var cv=document.createElement('canvas'); cv.width=1024; cv.height=512;
+  var ctx=cv.getContext('2d');
+  var g=ctx.createLinearGradient(0,0,0,512);
+  g.addColorStop(0,'#cfe0f2');   /* zenith */
+  g.addColorStop(0.48,'#f6f7f8');/* bright horizon */
+  g.addColorStop(0.55,'#e7e3da');
+  g.addColorStop(1,'#a89f92');   /* studio floor */
+  ctx.fillStyle=g; ctx.fillRect(0,0,1024,512);
+  var rg=ctx.createRadialGradient(700,110,20,700,110,280);
+  rg.addColorStop(0,'rgba(255,252,240,0.95)');   /* softbox hotspot */
+  rg.addColorStop(1,'rgba(255,252,240,0)');
+  ctx.fillStyle=rg; ctx.fillRect(0,0,1024,512);
+  var tex=new THREE.CanvasTexture(cv);
+  tex.mapping=THREE.EquirectangularReflectionMapping;
+  var pmrem=new THREE.PMREMGenerator(renderer);
+  pmrem.compileEquirectangularShader();
+  photoEnv=pmrem.fromEquirectangular(tex).texture;
+  pmrem.dispose();
+  var bgRT=new THREE.WebGLCubeRenderTarget(512);
+  bgRT.fromEquirectangularTexture(renderer,tex);
+  photoBg=bgRT.texture;
+  tex.dispose();
+}
+function ensureShadow(){
+  if(shadowReady)return; shadowReady=true;
+  keyLight.shadow.mapSize.set(2048,2048);
+  var d=150;
+  keyLight.shadow.camera.left=-d; keyLight.shadow.camera.right=d;
+  keyLight.shadow.camera.top=d;   keyLight.shadow.camera.bottom=-d;
+  keyLight.shadow.camera.near=10; keyLight.shadow.camera.far=600;
+  keyLight.shadow.bias=-0.0005;
+}
+function setPhotoRendering(on){
+  renderer.toneMapping=on?THREE.ACESFilmicToneMapping:THREE.NoToneMapping;
+  renderer.toneMappingExposure=on?1.08:1.0;
+  scene.traverse(function(o){
+    if(!o.material)return;
+    if(Array.isArray(o.material))o.material.forEach(function(m){m.needsUpdate=true;});
+    else o.material.needsUpdate=true;
+  });
+}
+
+// ── Axes ──
+var axMat=new THREE.LineBasicMaterial({color:0x2a4a6a});
+function axLine(p1,p2){scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...p1),new THREE.Vector3(...p2)]),axMat));}
+axLine([0,0,0],[SCENE_W+6,0,0]);
+axLine([0,0,0],[0,TARGET_H+6,0]);
+axLine([0,0,costToZ(costMin)],[0,0,costToZ(costMax)-4]);
+
+// ── Sprites ──
+function makeSprite(text,bold,color){
+  var cv=document.createElement('canvas'); cv.width=512; cv.height=80;
+  var ctx=cv.getContext('2d'); ctx.clearRect(0,0,512,80);
+  ctx.font=(bold?'bold ':'')+' 32px "Garamond","EB Garamond","Times New Roman",serif';
+  ctx.fillStyle=color||'#4a9eff'; ctx.textBaseline='middle'; ctx.fillText(text,4,40);
+  var tex=new THREE.CanvasTexture(cv); tex.needsUpdate=true;
+  return new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+}
+function addLabel(text,x,y,z,w,h,bold,color){var sp=makeSprite(text,bold,color);sp.scale.set(w,h,1);sp.position.set(x,y,z);scene.add(sp);}
+
+addLabel('Event Count (k)', cx,-5.5,costToZ(costMin)+6, 26,3.8,true,'#4a9eff');
+addLabel('Joint Density',   -13,TARGET_H*0.55,0,         16,3,  true,'#4a9eff');
+var costAxisLabel=null;
+function rebuildCostAxisLabel(){
+  if(costAxisLabel)scene.remove(costAxisLabel);
+  costAxisLabel=makeSprite('Per-Event Cost ('+axisMode+')',true,'#4a9eff');
+  costAxisLabel.scale.set(24,3.8,1); costAxisLabel.position.set(-15,2,cz); scene.add(costAxisLabel);
+}
+rebuildCostAxisLabel();
+
+for (var ti=0; ti<=6; ti++) {
+  var kv=kLo+(ti/6)*kRange, kl=Math.round(kv)>=1000?(Math.round(kv)/1000).toFixed(1)+'k':String(Math.round(kv));
+  var sp=makeSprite(kl,false,'#8b949e'); sp.scale.set(7,2.2,1); sp.position.set(kToX(kv),-4,costToZ(costMin)+6); scene.add(sp);
+}
+var costTickSprites=[];
+function rebuildCostTicks(){
+  costTickSprites.forEach(function(s){scene.remove(s);});
+  costTickSprites=[];
+  for (var ci2=0; ci2<=5; ci2++) {
+    var cv2=costAtFrac(ci2/5), cl;
+    if(cv2>=1e9)cl=(cv2/1e9).toFixed(1)+'B'; else if(cv2>=1e6)cl=(cv2/1e6).toFixed(2)+'M'; else if(cv2>=1e3)cl=(cv2/1e3).toFixed(1)+'k'; else cl=cv2.toFixed(0);
+    var sp2=makeSprite(''+cl,false,'#8b949e'); sp2.scale.set(9,2.4,1); sp2.position.set(-12,-1,costToZ(cv2));
+    costTickSprites.push(sp2); scene.add(sp2);
+  }
+}
+rebuildCostTicks();
+
+// ── Contour ribbons ──
+var contourLines=[];
+function addIsoRibbon(lossValue,hexColor,yLift,label){
+  var pts=[];
+  for(var s=0;s<=400;s++){
+    var kv2=kLo+(s/400)*kRange; if(kv2<=0)continue;
+    var cv3=lossValue/kv2; if(cv3<costMin||cv3>costMax)continue;
+    var kF2=Math.floor(kv2),kC2=Math.min(kF2+1,kHi),kFr2=kv2-kF2;
+    var pk2=poissonPmf(kF2,model.lambda)*(1-kFr2)+poissonPmf(kC2,model.lambda)*kFr2;
+    var h2=(pk2*lognormalPdf(cv3,model.mu,model.sigma)*jac(cv3)/Math.max(fMax,1e-300))*TARGET_H;
+    pts.push(new THREE.Vector3(kToX(kv2),h2+yLift,costToZ(cv3)));
+  }
+  if(pts.length<2)return;
+  var line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts),new THREE.LineBasicMaterial({color:hexColor,linewidth:2}));
+  line.userData={label:label,value:lossValue}; contourLines.push(line); scene.add(line);
+}
+function rebuildRibbons(){
+  contourLines.forEach(function(l){scene.remove(l);l.geometry.dispose();});
+  contourLines=[];
+  addIsoRibbon(model.p10,  0x22c55e,0.5,'P10');
+  addIsoRibbon(model.p50,  0x3b82f6,0.8,'P50');
+  addIsoRibbon(model.p80,  0xeab308,1.1,'P80');
+  addIsoRibbon(model.p95,  0xef4444,1.4,'P95');
+  addIsoRibbon(model.eal,  0x06b6d4,0.9,'EAL');
+  addIsoRibbon(model.tvar80,0xf97316,1.6,'TVaR80');
+  addIsoRibbon(model.tvar95,0xa855f7,1.8,'TVaR95');
+}
+rebuildRibbons();
+
+// ── Tooltip ──
+var mouse=new THREE.Vector2(), raycaster=new THREE.Raycaster();
+raycaster.params.Line={threshold:2};
+var tip=document.createElement('div');
+tip.style.cssText='position:fixed;display:none;z-index:30;background:rgba(13,17,23,0.95);border:1px solid #2a3a4a;border-radius:3px;padding:5px 10px;font-size:11px;font-family:"IBM Plex Mono",monospace;color:#c9d1d9;pointer-events:none;box-shadow:0 2px 8px rgba(0,0,0,0.4);';
+document.body.appendChild(tip);
+var mouseX=0,mouseY=0;
+renderer.domElement.addEventListener('mousemove',function(e){
+  mouseX=e.clientX;mouseY=e.clientY;
+  var r=renderer.domElement.getBoundingClientRect();
+  mouse.x=((e.clientX-r.left)/r.width)*2-1;
+  mouse.y=-((e.clientY-r.top)/r.height)*2+1;
+  needsRender=true;
+});
+
+// ── Risk badge ──
+(function(){
+  var lam=model.lambda, cv=Math.sqrt(Math.exp(model.sigma*model.sigma)-1);
+  var hiL=lam>=5, hiC=cv>=0.75, focus,bg,fg;
+  if(!hiL&&!hiC){focus='Frequency';bg='#0f2a4a';fg='#4a9eff';}
+  else if(!hiL&&hiC){focus='Severity';bg='#2a0f0f';fg='#ef4444';}
+  else if(hiL&&!hiC){focus='Frequency';bg='#0f2a4a';fg='#4a9eff';}
+  else{focus='Both';bg='#2a1a0f';fg='#f97316';}
+  var b=document.getElementById('risk-badge');
+  b.textContent=focus; b.style.background=bg; b.style.color=fg; b.style.border='1px solid '+fg;
+})();
+
+// ── Style switcher ──
+var currentStyle='cad';
+function recolorVertices(colorFn){
+  var ca=geometry.attributes.color.array;
+  for(var i=0;i<vertexMeta.length;i++){var col=colorFn(vertexMeta[i].t);ca[i*3]=col[0];ca[i*3+1]=col[1];ca[i*3+2]=col[2];}
+  geometry.attributes.color.needsUpdate=true;
+  if(outlineMesh.geometry.attributes.color){outlineMesh.geometry.attributes.color.array.set(ca);outlineMesh.geometry.attributes.color.needsUpdate=true;}
+}
+
+function applyStyle(name){
+  currentStyle=name;
+  document.querySelectorAll('.style-card').forEach(function(c){c.classList.remove('selected');});
+  var card=document.getElementById('sc-'+name); if(card)card.classList.add('selected');
+
+  surfMesh.visible=true; outlineMesh.visible=false; wireMesh.visible=false;
+  cadLines.forEach(function(l){l.visible=false; l.material=cadMat;});
+  ground.visible=true; ground.material.color.set(0x111820);
+  ambientLight.intensity=0.7; keyLight.intensity=0.8; keyLight.color.set(0xffffff); fillLight.intensity=0.2; fillLight.color.set(0x4a9eff);
+  if(stars)stars.visible=false;
+  if(vaporGrid){vaporGrid.visible=false;horizonLine.visible=false;}
+  penLines.forEach(function(l){l.visible=false;});
+  lavaPulse=false;
+  keyLight.castShadow=false; surfMesh.castShadow=false;
+  if(photoOn){photoOn=false; setPhotoRendering(false);}
+
+  if(name==='cad'){
+    setTheme('dark'); recolorVertices(jetColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:22,specular:new THREE.Color(0.1,0.1,0.12)});
+    cadLines.forEach(function(l){l.visible=true;});
+  }else if(name==='cel'){
+    setTheme('light'); scene.background=new THREE.Color(0x87CEEB);
+    recolorVertices(celColor);
+    surfMesh.material=new THREE.MeshToonMaterial({vertexColors:true,gradientMap:gradMap,side:THREE.FrontSide});
+    outlineMesh.visible=true; ground.material.color.set(0x7BC67E);
+    ambientLight.intensity=0.9; keyLight.intensity=1.0; fillLight.intensity=0.15;
+  }else if(name==='wire'){
+    setTheme('dark'); scene.background=new THREE.Color(0x001428);
+    surfMesh.visible=false; ensureWireGeo(); wireMesh.visible=true;
+    wireMesh.material=new THREE.LineBasicMaterial({color:0x00ccff,transparent:true,opacity:0.7});
+    ground.visible=false;
+  }else if(name==='noir'){
+    setTheme('noir'); recolorVertices(noirColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:80,specular:new THREE.Color(0.6,0.6,0.6)});
+    ambientLight.intensity=0.05; keyLight.intensity=1.4; fillLight.intensity=0;
+    ground.material.color.set(0x050505);
+  }else if(name==='retro'){
+    setTheme('dark'); scene.background=new THREE.Color(0x0a0018);
+    recolorVertices(retroColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,side:THREE.DoubleSide,shininess:0});
+    ground.material.color.set(0x110033);
+  }else if(name==='neon'){
+    setTheme('neon'); recolorVertices(neonColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:120,specular:new THREE.Color(0.5,0,0.5),emissive:new THREE.Color(0.04,0,0.08)});
+    ensureWireGeo(); wireMesh.visible=true;
+    wireMesh.material=new THREE.LineBasicMaterial({color:0xff00ff,transparent:true,opacity:0.12});
+    keyLight.intensity=0.3; keyLight.color.set(0xff88ff); ambientLight.intensity=0.3; fillLight.intensity=0.1;
+    ground.material.color.set(0x0a0020);
+  }else if(name==='terrain'){
+    setTheme('terrain'); recolorVertices(terrainColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:12,specular:new THREE.Color(0.15,0.12,0.08)});
+    ground.material.color.set(0x7aaa6a);
+    ambientLight.intensity=0.6; keyLight.intensity=1.2; keyLight.color.set(0xfff4e0); fillLight.intensity=0.4;
+  }else if(name==='thermal'){
+    setTheme('thermal'); recolorVertices(thermalColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:40,specular:new THREE.Color(0.3,0.1,0),emissive:new THREE.Color(0.02,0,0)});
+    ground.material.color.set(0x080200);
+    ambientLight.intensity=0.15; keyLight.intensity=0.8; keyLight.color.set(0xff6600); fillLight.intensity=0.1; fillLight.color.set(0xff2200);
+  }else if(name==='blueprint'){
+    setTheme('blueprint'); recolorVertices(blueprintColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:false,color:new THREE.Color(0xffffff),side:THREE.DoubleSide,shininess:0,emissive:new THREE.Color(0,0.04,0.12)});
+    ensureWireGeo(); wireMesh.visible=true;
+    wireMesh.material=new THREE.LineBasicMaterial({color:0xffffff,transparent:true,opacity:0.22});
+    cadLines.forEach(function(l){l.visible=true;l.material=new THREE.LineBasicMaterial({color:0x4488ff,transparent:true,opacity:0.35});});
+    ground.material.color.set(0x020818);
+    ambientLight.intensity=0.15; keyLight.intensity=1.1; keyLight.color.set(0xaaccff); fillLight.intensity=0.3; fillLight.color.set(0x2255aa);
+  }else if(name==='holo'){
+    setTheme('holo'); recolorVertices(holoColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:200,specular:new THREE.Color(0.8,0.8,1.0),emissive:new THREE.Color(0.02,0.03,0.06),transparent:true,opacity:0.92});
+    ambientLight.intensity=0.5; keyLight.intensity=1.0; keyLight.color.set(0xccddff); fillLight.intensity=0.5; fillLight.color.set(0xff88ff);
+    ground.material.color.set(0x05060f);
+  }else if(name==='glass'){
+    setTheme('glass');
+    surfMesh.material=new THREE.MeshPhongMaterial({color:0x88ccee,side:THREE.DoubleSide,transparent:true,opacity:0.32,shininess:160,specular:new THREE.Color(1,1,1),depthWrite:false});
+    ensureWireGeo(); wireMesh.visible=true;
+    wireMesh.material=new THREE.LineBasicMaterial({color:0xaaddff,transparent:true,opacity:0.08});
+    ambientLight.intensity=0.5; keyLight.intensity=1.2; fillLight.intensity=0.3;
+    ground.material.color.set(0x0a1018);
+  }else if(name==='lava'){
+    setTheme('thermal'); recolorVertices(lavaColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:30,specular:new THREE.Color(0.4,0.1,0),emissive:new THREE.Color(0.06,0.01,0)});
+    ground.material.color.set(0x0a0202);
+    ambientLight.intensity=0.12; keyLight.intensity=0.7; keyLight.color.set(0xff5500); fillLight.intensity=0.15; fillLight.color.set(0xff2200);
+    lavaPulse=true;
+  }else if(name==='vapor'){
+    setTheme('vapor'); recolorVertices(vaporColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:60,specular:new THREE.Color(0.4,0.2,0.5),emissive:new THREE.Color(0.05,0,0.08)});
+    ensureVapor(); vaporGrid.visible=true; horizonLine.visible=true;
+    ground.visible=false;
+    ambientLight.intensity=0.45; keyLight.intensity=0.6; keyLight.color.set(0xff66cc); fillLight.intensity=0.35; fillLight.color.set(0x00ccff);
+  }else if(name==='sketch'){
+    setTheme('sketch'); recolorVertices(sketchColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:0,specular:new THREE.Color(0,0,0)});
+    ensurePenLines(); penLines.forEach(function(l){l.visible=true;});
+    ground.material.color.set(0xf2efe6);
+    ambientLight.intensity=1.0; keyLight.intensity=0.5; fillLight.intensity=0.2; fillLight.color.set(0xffffff);
+  }else if(name==='aurora'){
+    setTheme('aurora'); recolorVertices(auroraColor);
+    surfMesh.material=new THREE.MeshPhongMaterial({vertexColors:true,side:THREE.DoubleSide,shininess:50,specular:new THREE.Color(0.2,0.5,0.4),emissive:new THREE.Color(0,0.03,0.04)});
+    ensureStars(); stars.visible=true;
+    ground.material.color.set(0x040810);
+    ambientLight.intensity=0.3; keyLight.intensity=0.7; keyLight.color.set(0x88ffcc); fillLight.intensity=0.3; fillLight.color.set(0x8844ff);
+  }else if(name==='xray'){
+    setTheme('xray');
+    surfMesh.material=new THREE.MeshPhongMaterial({color:0x66aaff,side:THREE.DoubleSide,transparent:true,opacity:0.22,blending:THREE.AdditiveBlending,depthWrite:false,shininess:100,specular:new THREE.Color(0.6,0.8,1)});
+    ensureWireGeo(); wireMesh.visible=true;
+    wireMesh.material=new THREE.LineBasicMaterial({color:0x99ccff,transparent:true,opacity:0.18,blending:THREE.AdditiveBlending});
+    ground.visible=false;
+    ambientLight.intensity=0.6; keyLight.intensity=1.0; keyLight.color.set(0xaaccff);
+  }else if(name==='photo'){
+    setTheme('photo');
+    ensurePhotoEnv(); ensureShadow();
+    recolorVertices(photoColor);
+    surfMesh.material=new THREE.MeshPhysicalMaterial({vertexColors:true,side:THREE.DoubleSide,
+      roughness:0.34,metalness:0.05,clearcoat:0.65,clearcoatRoughness:0.3,
+      envMap:photoEnv,envMapIntensity:1.0});
+    scene.background=photoBg;
+    keyLight.castShadow=true; surfMesh.castShadow=true; surfMesh.receiveShadow=true; ground.receiveShadow=true;
+    ground.material.color.set(0xd9dcdf);
+    ambientLight.intensity=0.32; keyLight.intensity=1.25; keyLight.color.set(0xfff1de);
+    fillLight.intensity=0.4; fillLight.color.set(0xbfd4ff);
+    photoOn=true; setPhotoRendering(true);
+  }
+
+  if(outlineMesh.visible){
+    var pa2=geometry.attributes.position.array, oa=outlineMesh.geometry.attributes.position.array;
+    oa.set(pa2); outlineMesh.geometry.attributes.position.needsUpdate=true; outlineMesh.geometry.computeVertexNormals();
+  }
+  toggleStylePanel(false); needsRender=true;
+}
+
+var stylePanelOpen=false;
+function toggleStylePanel(forceClose){
+  if(forceClose===false)stylePanelOpen=false; else stylePanelOpen=!stylePanelOpen;
+  document.getElementById('style-panel').style.display=stylePanelOpen?'block':'none';
+  document.getElementById('btn-style').classList.toggle('active',stylePanelOpen);
+}
+document.addEventListener('click',function(e){
+  if(stylePanelOpen&&!document.getElementById('style-panel').contains(e.target)&&e.target!==document.getElementById('btn-style'))toggleStylePanel(false);
+});
+
+// ── Slice ──
+var sliceOn=true, slicePlane=null, sliceCurve=null, sliceBase=null;
+var planeMat=new THREE.MeshBasicMaterial({color:0x0066cc,transparent:true,opacity:0.06,side:THREE.DoubleSide,depthWrite:false});
+function clearSlice(){
+  if(slicePlane){scene.remove(slicePlane);slicePlane.geometry.dispose();slicePlane=null;}
+  if(sliceCurve){scene.remove(sliceCurve);sliceCurve.geometry.dispose();sliceCurve=null;}
+  if(sliceBase){scene.remove(sliceBase);sliceBase.geometry.dispose();sliceBase=null;}
+}
+function buildSlice(){
+  clearSlice(); if(!sliceOn)return; needsRender=true;
+  var axis=document.getElementById('slice-axis').value;
+  var raw=parseFloat(document.getElementById('slice-slider').value);
+  var curvePts=[], peakD=0, readLabel='', peakLoss=0;
+  var surfH=TARGET_H*1.5;
+
+  if(axis==='k'){
+    var kVal=Math.round(raw), xPos=kToX(kVal);
+    slicePlane=new THREE.Mesh(new THREE.PlaneGeometry(costRange*SCENE_D/costRange,surfH),planeMat);
+    slicePlane.rotation.y=Math.PI/2; slicePlane.position.set(xPos,surfH/2,cz); scene.add(slicePlane);
+    var pk3=poissonPmf(kVal,model.lambda);
+    for(var sj=0;sj<=200;sj++){
+      var sc=costAtFrac(sj/200);
+      var sd=(pk3*lognormalPdf(sc,model.mu,model.sigma)*jac(sc)/Math.max(fMax,1e-300))*TARGET_H;
+      curvePts.push(new THREE.Vector3(xPos,sd+0.4,costToZ(sc)));
+      if(sd>peakD){peakD=sd;readLabel=(sc/1e6).toFixed(2)+'M';peakLoss=kVal*sc;}
+    }
+    document.getElementById('slice-lbl').textContent='k';
+    document.getElementById('slice-out').textContent=String(kVal);
+    document.getElementById('slice-readout').innerHTML='<strong>k = '+kVal+' failures/yr</strong><br>P(N='+kVal+') = '+(pk3*100).toFixed(2)+'%<br>Peak cost: '+readLabel+'<br>Ann. loss: '+(peakLoss/1e6).toFixed(2)+'M';
+  }else if(axis==='cost'){
+    var costVal=axisMode==='log'?Math.exp(raw):raw, zPos=costToZ(costVal);
+    slicePlane=new THREE.Mesh(new THREE.PlaneGeometry(SCENE_W,surfH),planeMat);
+    slicePlane.position.set(cx,surfH/2,zPos); scene.add(slicePlane);
+    var xpdf=lognormalPdf(costVal,model.mu,model.sigma);
+    for(var si=0;si<=kRange;si++){
+      var kv3=kLo+si, kF3=Math.floor(kv3), kC3=Math.min(kF3+1,kHi);
+      var pk4=poissonPmf(kF3,model.lambda);
+      var sd2=(pk4*xpdf*jac(costVal)/Math.max(fMax,1e-300))*TARGET_H;
+      curvePts.push(new THREE.Vector3(kToX(kv3),sd2+0.4,zPos));
+      if(sd2>peakD){peakD=sd2;readLabel='k='+kv3;peakLoss=kv3*costVal;}
+    }
+    document.getElementById('slice-lbl').textContent='Cost';
+    document.getElementById('slice-out').textContent=(costVal/1e6).toFixed(2)+'M';
+    document.getElementById('slice-readout').innerHTML='<strong>Cost = '+(costVal/1e6).toFixed(2)+'M/event</strong><br>PDF = '+xpdf.toExponential(2)+'<br>Peak at: '+readLabel+'<br>Ann. loss: '+(peakLoss/1e6).toFixed(2)+'M';
+  }else{
+    var Lval=raw;
+    for(var li=1;li<=kHi;li++){
+      var lc=Lval/li; if(lc<costMin||lc>costMax)continue;
+      var lF=Math.floor(li), pk5=poissonPmf(lF,model.lambda);
+      var ld=(pk5*lognormalPdf(lc,model.mu,model.sigma)*jac(lc)/Math.max(fMax,1e-300))*TARGET_H;
+      curvePts.push(new THREE.Vector3(kToX(li),ld+0.4,costToZ(lc)));
+      if(ld>peakD){peakD=ld;readLabel='k='+li;peakLoss=Lval;}
+    }
+    document.getElementById('slice-lbl').textContent='Loss';
+    document.getElementById('slice-out').textContent=(raw/1e6).toFixed(1)+'M';
+    document.getElementById('slice-readout').innerHTML='<strong>Annual Loss = '+(Lval/1e6).toFixed(2)+'M</strong><br>Peak at: '+readLabel+'<br>'+(Lval>=model.tvar95?'<span style="color:#ef4444">TAIL RISK</span>':'Below TVaR95');
+  }
+
+  if(curvePts.length>1){
+    sliceCurve=new THREE.Line(new THREE.BufferGeometry().setFromPoints(curvePts),new THREE.LineBasicMaterial({color:0xffffff,linewidth:2}));
+    scene.add(sliceCurve);
+    var basePts=curvePts.map(function(p){return new THREE.Vector3(p.x,0.1,p.z);});
+    sliceBase=new THREE.Line(new THREE.BufferGeometry().setFromPoints(basePts),new THREE.LineBasicMaterial({color:0x0066cc,transparent:true,opacity:0.5}));
+    scene.add(sliceBase);
+  }
+}
+function updateSlice(){
+  var axis=document.getElementById('slice-axis').value;
+  var slider=document.getElementById('slice-slider');
+  var cur=parseFloat(slider.value);
+  if(axis==='k'){slider.min=kLo||1;slider.max=kHi;slider.step=1;if(cur<slider.min||cur>slider.max)slider.value=Math.round(model.lambda);}
+  else if(axis==='cost'){
+    if(axisMode==='log'){slider.min=logMin;slider.max=logMax;slider.step=logRange/200;if(cur<logMin||cur>logMax)slider.value=model.mu;}
+    else{slider.min=costMin;slider.max=costMax;slider.step=costRange/200;if(cur<costMin||cur>costMax)slider.value=Math.exp(model.mu-model.sigma*model.sigma);}
+  }
+  else{slider.min=model.p10*0.5;slider.max=model.tvar95*1.5;slider.step=Math.round(model.eal/100);if(cur<slider.min||cur>slider.max)slider.value=model.eal;}
+  buildSlice(); needsRender=true;
+}
+function toggleSlice(){
+  sliceOn=!sliceOn;
+  var btn=document.getElementById('slice-toggle');
+  btn.textContent=sliceOn?'Slice On':'Slice Off'; btn.className=sliceOn?'':'off';
+  if(!sliceOn){clearSlice();document.getElementById('slice-readout').textContent='Slice disabled.';}
+  else updateSlice();
+  needsRender=true;
+}
+setTimeout(function(){updateSlice();},300);
+
+// ── Snap views ──
+var VIEWS={
+  free: {pos:[cx,TARGET_H*2.4,SCENE_D*1.2],tgt:[cx,cy,cz]},
+  top:  {pos:[cx,TARGET_H*6,cz],tgt:[cx,0,cz]},
+  front:{pos:[cx,TARGET_H*0.9,costToZ(costMin)+SCENE_D*1.4],tgt:[cx,cy,cz]},
+  side: {pos:[-SCENE_W*0.8,TARGET_H*0.5,cz],tgt:[cx,cy,cz]},
+  peak: {pos:[peakX+12,peakY+22,peakZ+22],tgt:[peakX,peakY,peakZ]}
+};
+var lerpActive=false,lerpT=0,LERP_DUR=60;
+var lerpFrom={pos:new THREE.Vector3(),tgt:new THREE.Vector3()};
+var lerpTo={pos:new THREE.Vector3(),tgt:new THREE.Vector3()};
+function setActiveBtn(id){document.querySelectorAll('.view-btn').forEach(function(b){b.classList.remove('active');});var el=document.getElementById(id);if(el)el.classList.add('active');}
+function snapView(name){var v=VIEWS[name];lerpFrom.pos.copy(camera.position);lerpFrom.tgt.copy(controls.target);lerpTo.pos.set(v.pos[0],v.pos[1],v.pos[2]);lerpTo.tgt.set(v.tgt[0],v.tgt[1],v.tgt[2]);lerpT=0;lerpActive=true;setActiveBtn('btn-'+name);}
+controls.addEventListener('start',function(){lerpActive=false;setActiveBtn('btn-free');});
+
+// ── Rise animation ──
+var RISE_FRAMES=110, riseFrame=0, riseActive=true;
+function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+
+// Wire geo stores for rise
+var wireLineGeos=[];
+cadLines.forEach(function(l,idx){wireLineGeos.push({geo:l.geometry,ki:idx<Math.ceil(K_STEPS/wStep)?idx*wStep:undefined,cj:idx>=Math.ceil(K_STEPS/wStep)?(idx-Math.ceil(K_STEPS/wStep))*wStep:undefined});});
+
+function tickRise(){
+  if(!riseActive)return;
+  riseFrame++;
+  var ease=easeOutCubic(Math.min(riseFrame/RISE_FRAMES,1));
+  var pa=geometry.attributes.position.array;
+  for(var i=0;i<heights.length;i++) pa[i*3+1]=heights[i]*ease;
+  geometry.attributes.position.needsUpdate=true;
+  geometry.computeVertexNormals();
+  // Raise cad grid lines
+  for(var wg3=0;wg3<wireLineGeos.length;wg3++){
+    var wObj=wireLineGeos[wg3], wa=wObj.geo.attributes.position.array;
+    if(wObj.ki!==undefined){for(var wj3=0;wj3<COST_STEPS;wj3++)wa[wj3*3+1]=heights[wObj.ki*COST_STEPS+wj3]*ease;}
+    else if(wObj.cj!==undefined){for(var wi3=0;wi3<K_STEPS;wi3++)wa[wi3*3+1]=heights[wi3*COST_STEPS+wObj.cj]*ease;}
+    wObj.geo.attributes.position.needsUpdate=true;
+  }
+  if(riseFrame>=RISE_FRAMES){
+    riseActive=false;
+    for(var i2=0;i2<heights.length;i2++) pa[i2*3+1]=heights[i2];
+    geometry.attributes.position.needsUpdate=true;
+    geometry.computeVertexNormals();
+    needsRender=true;
+  }
+}
+
+// ── Axis mode toggle (Linear vs Log) ──
+var STYLE_RAMPS={cad:jetColor,cel:celColor,noir:noirColor,retro:retroColor,neon:neonColor,
+  terrain:terrainColor,thermal:thermalColor,blueprint:blueprintColor,holo:holoColor,
+  lava:lavaColor,vapor:vaporColor,sketch:sketchColor,aurora:auroraColor,photo:photoColor};
+
+function syncCadLines(){
+  for(var w=0;w<wireLineGeos.length;w++){
+    var o=wireLineGeos[w], arr=o.geo.attributes.position.array;
+    if(o.ki!==undefined){for(var j=0;j<COST_STEPS;j++)arr[j*3+1]=heights[o.ki*COST_STEPS+j];}
+    else if(o.cj!==undefined){for(var i2=0;i2<K_STEPS;i2++)arr[i2*3+1]=heights[i2*COST_STEPS+o.cj];}
+    o.geo.attributes.position.needsUpdate=true;
+  }
+}
+
+function rebuildForAxisMode(){
+  computeAxisWindow();
+  buildDensityGrid();
+  var pa=geometry.attributes.position.array;
+  peakY=0;
+  for(var vi2=0;vi2<K_STEPS;vi2++){
+    for(var vj2=0;vj2<COST_STEPS;vj2++){
+      var idx=vi2*COST_STEPS+vj2, cell=densityGrid[vi2][vj2];
+      var h=(cell.f/Math.max(fMax,1e-300))*TARGET_H;
+      heights[idx]=h; pa[idx*3+1]=h;
+      vertexMeta[idx].t=Math.pow(h/TARGET_H,0.55);
+      if(h>peakY){peakY=h;peakX=kToX(cell.k);peakZ=costToZ(cell.cost);}
+    }
+  }
+  geometry.attributes.position.needsUpdate=true;
+  geometry.computeVertexNormals();
+  recolorVertices(STYLE_RAMPS[currentStyle]||jetColor);
+  syncCadLines();
+  if(wireGeoBuilt){wireMesh.geometry.dispose();wireMesh.geometry=new THREE.WireframeGeometry(geometry);}
+  if(penBuilt){
+    penLines.forEach(function(l){scene.remove(l);l.geometry.dispose();});
+    penLines=[]; penBuilt=false; ensurePenLines();
+    var vis=(currentStyle==='sketch');
+    penLines.forEach(function(l){l.visible=vis;});
+  }
+  if(outlineMesh.visible){
+    var oa=outlineMesh.geometry.attributes.position.array;
+    oa.set(pa); outlineMesh.geometry.attributes.position.needsUpdate=true;
+    outlineMesh.geometry.computeVertexNormals();
+  }
+  rebuildRibbons();
+  rebuildCostTicks();
+  rebuildCostAxisLabel();
+  VIEWS.peak={pos:[peakX+12,peakY+22,peakZ+22],tgt:[peakX,peakY,peakZ]};
+  updateSlice();
+  needsRender=true;
+}
+
+function setAxisMode(m){
+  if(axisMode===m)return;
+  axisMode=m;
+  document.getElementById('btn-lin').classList.toggle('active',m==='linear');
+  document.getElementById('btn-log').classList.toggle('active',m==='log');
+  rebuildForAxisMode();
+}
+
+// ── Render loop ──
+var needsRender=true;
+controls.addEventListener('change',function(){needsRender=true;});
+
+(function animate(){
+  requestAnimationFrame(animate);
+  if(riseActive){tickRise();needsRender=true;}
+  if(lerpActive){
+    lerpT++;
+    var t=Math.min(lerpT/LERP_DUR,1), ease=t<0.5?2*t*t:-1+(4-2*t)*t;
+    camera.position.lerpVectors(lerpFrom.pos,lerpTo.pos,ease);
+    controls.target.lerpVectors(lerpFrom.tgt,lerpTo.tgt,ease);
+    controls.update(); if(lerpT>=LERP_DUR)lerpActive=false; needsRender=true;
+  }
+  if(lavaPulse){
+    var pulse=0.04+0.05*(0.5+0.5*Math.sin(Date.now()*0.0022));
+    surfMesh.material.emissive.setRGB(pulse,pulse*0.2,0);
+    needsRender=true;
+  }
+  if(needsRender){
+    if(!riseActive&&!lerpActive)controls.update();
+    raycaster.setFromCamera(mouse,camera);
+    var hits=raycaster.intersectObjects(contourLines,false);
+    if(hits.length>0){var d=hits[0].object.userData;tip.style.display='block';tip.style.left=(mouseX+14)+'px';tip.style.top=(mouseY+14)+'px';tip.textContent=d.label+' \u2014 '+Math.round(d.value).toLocaleString();}
+    else tip.style.display='none';
+    renderer.render(scene,camera);
+    needsRender=false;
+  }
+})();
+
+window.addEventListener('resize',function(){
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  needsRender=true;
+});
+</script>
+</body>
+</html>
