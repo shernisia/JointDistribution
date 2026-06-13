@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cross-Asset Mitigation 3D — iARM</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
+:root{
+  --navy:#0A2342;--gold:#C9943A;--red:#c0392b;--green:#27ae60;
+  --teal:#1abc9c;--purple:#8e44ad;--orange:#e67e22;--blue:#2980b9;
+  --panel:rgba(6,20,40,0.97);--grid:rgba(201,148,58,0.07);
+  --text:#e8edf5;--muted:#7a92b0;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--navy);font-family:'Barlow',sans-serif;color:var(--text);height:100vh;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+
+#header{position:fixed;top:0;left:0;right:0;height:52px;background:rgba(6,20,40,0.95);border-bottom:1px solid rgba(201,148,58,0.3);display:flex;align-items:center;padding:0 20px;gap:16px;z-index:100;backdrop-filter:blur(8px);}
+.logo{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:18px;color:var(--gold);letter-spacing:2px;}
+.sep{width:1px;height:28px;background:rgba(201,148,58,0.3);}
+.hdr-title{font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
+.badge{margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold);background:rgba(201,148,58,0.1);border:1px solid rgba(201,148,58,0.3);padding:3px 10px;border-radius:2px;}
+.hdr-btn{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid rgba(201,148,58,0.25);padding:3px 10px;border-radius:2px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px;}
+.hdr-btn:hover{color:var(--gold);border-color:var(--gold);}
+.hdr-btn.on{color:var(--gold);background:rgba(201,148,58,0.12);border-color:rgba(201,148,58,0.5);}
+
+#legend{position:fixed;top:64px;left:16px;background:rgba(6,20,40,0.9);border:1px solid rgba(201,148,58,0.2);border-radius:4px;padding:12px 16px;z-index:50;font-size:12px;backdrop-filter:blur(6px);}
+.leg-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
+.leg-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;color:var(--muted);}
+.leg-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.leg-line{width:24px;height:2px;flex-shrink:0;}
+
+#hint{position:fixed;bottom:48px;left:16px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8;z-index:50;}
+#svg-container{position:fixed;top:52px;left:0;right:0;bottom:40px;z-index:1;}
+svg{width:100%;height:100%;display:block;touch-action:none;}
+
+.node circle{stroke-width:2;cursor:pointer;transition:filter 0.15s;}
+.node circle:hover{filter:brightness(1.35);}
+.node text{font-family:'Barlow',sans-serif;font-size:11px;fill:var(--text);pointer-events:none;text-anchor:middle;}
+.link{fill:none;}
+.link.cascade{stroke:var(--gold);stroke-dasharray:6,3;stroke-width:2;stroke-opacity:0.75;}
+.link.cascade.mitigated{stroke:var(--green);stroke-dasharray:none;stroke-width:2.5;stroke-opacity:0.9;}
+
+/* ── PANEL ── */
+#panel{position:fixed;top:64px;right:16px;width:340px;max-height:calc(100vh - 120px);overflow-y:auto;background:var(--panel);border:1px solid rgba(201,148,58,0.4);border-radius:4px;z-index:200;display:none;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.6);}
+#panel.open{display:block;}
+.ph{background:rgba(201,148,58,0.12);border-bottom:1px solid rgba(201,148,58,0.3);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:10;backdrop-filter:blur(8px);}
+.ph-title{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:13px;color:var(--gold);letter-spacing:1px;text-transform:uppercase;}
+.ph-close{background:none;border:none;color:var(--muted);cursor:pointer;font-size:18px;padding:0 4px;}
+.ph-close:hover{color:var(--text);}
+.pb{padding:16px;}
+.node-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;margin-bottom:3px;}
+.node-meta{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:14px;}
+.sec{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(201,148,58,0.2);}
+
+/* ── STRATEGY TABLE ── */
+.strat-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;}
+.strat-table th{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.08);text-align:left;white-space:nowrap;}
+.strat-table th.num{text-align:right;}
+.strat-table td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle;}
+.strat-table tr:last-child td{border-bottom:none;}
+.strat-table tr.disabled td{opacity:0.4;}
+
+/* checkbox */
+.strat-cb{width:14px;height:14px;accent-color:var(--gold);cursor:pointer;}
+
+/* inline inputs inside table */
+.ti{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,148,58,0.25);border-radius:2px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;padding:3px 5px;text-align:right;outline:none;}
+.ti:focus{border-color:var(--gold);}
+.ti.name-ti{text-align:left;font-family:'Barlow',sans-serif;}
+
+/* add / remove row */
+.row-del{background:none;border:none;color:#e74c3c;cursor:pointer;font-size:14px;padding:0 2px;opacity:0.6;}
+.row-del:hover{opacity:1;}
+.btn-add-row{width:100%;margin-top:6px;padding:6px;background:rgba(201,148,58,0.06);border:1px dashed rgba(201,148,58,0.3);border-radius:3px;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-add-row:hover{background:rgba(201,148,58,0.12);color:var(--gold);}
+
+/* results bar */
+.results-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding:9px 10px;background:rgba(201,148,58,0.08);border:1px solid rgba(201,148,58,0.2);border-radius:3px;}
+.rb-item{display:flex;flex-direction:column;align-items:center;flex:1;min-width:60px;}
+.rb-label{font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
+.rb-val{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--gold);}
+.rb-val.green{color:var(--green);}
+
+/* cascade info */
+.cascade-info{background:rgba(26,188,156,0.06);border:1px solid rgba(26,188,156,0.2);border-radius:3px;padding:10px 12px;margin-top:4px;}
+.ci-row{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8;}
+.ci-row span{color:var(--text);}
+
+/* ROI */
+.roi-box{background:rgba(39,174,96,0.09);border:1px solid rgba(39,174,96,0.28);border-radius:3px;padding:9px 12px;margin-top:10px;display:none;}
+.roi-box.show{display:block;}
+.roi-row{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:3px;}
+.roi-row .rv{color:#2ecc71;}
+.roi-row.big .rv{font-size:14px;font-weight:600;}
+
+.btn-apply{width:100%;margin-top:14px;padding:10px;background:linear-gradient(135deg,rgba(201,148,58,0.2),rgba(201,148,58,0.08));border:1px solid var(--gold);border-radius:3px;color:var(--gold);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
+.btn-apply:hover{background:rgba(201,148,58,0.28);box-shadow:0 0 12px rgba(201,148,58,0.25);}
+.btn-clear{width:100%;margin-top:6px;padding:7px;background:none;border:1px solid rgba(192,57,43,0.4);border-radius:3px;color:#e74c3c;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:500;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
+.btn-clear:hover{background:rgba(192,57,43,0.1);}
+
+#tooltip{position:fixed;pointer-events:none;background:rgba(6,20,40,0.95);border:1px solid rgba(201,148,58,0.3);border-radius:3px;padding:8px 12px;font-size:11px;font-family:'Share Tech Mono',monospace;color:var(--text);z-index:300;display:none;line-height:1.7;max-width:270px;}
+
+#sumbar{position:fixed;bottom:0;left:0;right:0;height:40px;background:rgba(6,20,40,0.95);border-top:1px solid rgba(201,148,58,0.2);display:flex;align-items:center;padding:0 20px;gap:28px;z-index:100;font-family:'Share Tech Mono',monospace;font-size:11px;}
+.si{display:flex;gap:8px;align-items:center;}
+.sl{color:var(--muted);}
+.sv{color:var(--gold);}
+.sv.g{color:var(--green);}
+</style>
+</head>
+<body>
+
+<div id="header">
+  <span class="logo">iARM</span><div class="sep"></div>
+  <span class="hdr-title">Cross-Asset Mitigation</span>
+  <span class="badge">CRR™ PROTOTYPE · 3D</span>
+  <button class="hdr-btn on" id="btn-spin">AUTO-SPIN: ON</button>
+  <button class="hdr-btn" id="btn-reset">RESET VIEW</button>
+</div>
+
+<div id="legend">
+  <div class="leg-title">Legend</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#c0392b"></div>High tail contributor</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#e67e22"></div>Medium tail contributor</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#2980b9"></div>Low / isolated</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#8e44ad"></div>Trigger node</div>
+  <div class="leg-row"><div class="leg-dot" style="background:#27ae60"></div>Mitigated</div>
+  <div class="leg-row" style="margin-top:8px">
+    <div class="leg-line" style="background:repeating-linear-gradient(90deg,#C9943A 0,#C9943A 6px,transparent 6px,transparent 9px)"></div>Cascade link
+  </div>
+  <div class="leg-row"><div class="leg-line" style="background:#27ae60"></div>Mitigated cascade</div>
+</div>
+
+<div id="hint">CLICK any node to edit strategies &nbsp;·&nbsp; DRAG node to reposition &nbsp;·&nbsp; DRAG background to rotate 3D &nbsp;·&nbsp; SCROLL to zoom &nbsp;·&nbsp; MIDDLE-DRAG to pan &nbsp;·&nbsp; DBL-CLICK node to unpin</div>
+<div id="svg-container"><svg id="graph"></svg></div>
+
+<!-- PANEL -->
+<div id="panel">
+  <div class="ph">
+    <span class="ph-title">Mitigation Strategies</span>
+    <button class="ph-close" id="ph-close">✕</button>
+  </div>
+  <div class="pb">
+    <div class="node-name" id="p-name"></div>
+    <div class="node-meta" id="p-meta"></div>
+
+    <div class="sec">Strategies</div>
+    <table class="strat-table" id="strat-table">
+      <thead>
+        <tr>
+          <th style="width:20px">On</th>
+          <th>Name</th>
+          <th class="num" style="width:52px">Freq↓%</th>
+          <th class="num" style="width:52px">Sev↓%</th>
+          <th class="num" style="width:68px">$/yr</th>
+          <th style="width:20px"></th>
+        </tr>
+      </thead>
+      <tbody id="strat-tbody"></tbody>
+    </table>
+    <button class="btn-add-row" id="btn-add-row">+ Add Strategy</button>
+
+    <!-- Combined results bar -->
+    <div class="results-bar" id="results-bar">
+      <div class="rb-item"><div class="rb-label">Freq↓</div><div class="rb-val green" id="rb-freq">0%</div></div>
+      <div class="rb-item"><div class="rb-label">Sev↓</div><div class="rb-val green" id="rb-sev">0%</div></div>
+      <div class="rb-item"><div class="rb-label">$/yr</div><div class="rb-val" id="rb-cost">$0</div></div>
+      <div class="rb-item"><div class="rb-label">On</div><div class="rb-val" id="rb-on">0</div></div>
+    </div>
+
+    <!-- Cascade context (read-only) -->
+    <div id="p-cascade-info" style="display:none">
+      <div class="sec" id="p-cascade-label">Cascade Relationships</div>
+      <div class="cascade-info" id="p-cascade-body"></div>
+    </div>
+
+    <!-- ROI preview -->
+    <div class="roi-box" id="p-roi">
+      <div class="roi-row"><span class="sl">EAL Reduction</span><span class="rv" id="r-eal">—</span></div>
+      <div class="roi-row"><span class="sl">TVaR Reduction</span><span class="rv" id="r-tvar">—</span></div>
+      <div class="roi-row big"><span class="sl">Tail ROI</span><span class="rv" id="r-roi">—</span></div>
+    </div>
+
+    <button class="btn-apply" id="p-apply">Apply Mitigation</button>
+    <button class="btn-clear" id="p-clear">Clear All Strategies</button>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<div id="sumbar">
+  <div class="si"><span class="sl">PORTFOLIO TVaR₈₀</span><span class="sv" id="s-tvar">$13.3M</span></div>
+  <div class="si"><span class="sl">PORTFOLIO EAL</span><span class="sv" id="s-eal">$8.0M</span></div>
+  <div class="si"><span class="sl">TOTAL SPEND</span><span class="sv g" id="s-spend">$0</span></div>
+  <div class="si"><span class="sl">TVaR REDUCTION</span><span class="sv g" id="s-red">$0</span></div>
+  <div class="si"><span class="sl">PORTFOLIO TAIL ROI</span><span class="sv g" id="s-roi">—</span></div>
+</div>
+
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────────
+const NODES = [
+  {id:"DCU-COKE-SL", label:"DCU Coke\nStorage/Loadout", rank:1,  tailPct:63,   eal:3200000, tvar:8400000, lambda:2.1, cv:1.4, tier:"high"},
+  {id:"DCU-DRUMS",   label:"DCU Coke\nDrums",           rank:2,  tailPct:22,   eal:1800000, tvar:2900000, lambda:1.4, cv:1.2, tier:"high"},
+  {id:"CDU-AGOP",    label:"CDU Atm Gas\nOil Pumps",    rank:3,  tailPct:14,   eal:1100000, tvar:1800000, lambda:3.2, cv:0.9, tier:"high"},
+  {id:"FCC-REGEN",   label:"FCCU\nRegenerator",          rank:4,  tailPct:0.6,  eal:480000,  tvar:620000,  lambda:0.8, cv:1.1, tier:"med"},
+  {id:"HX-CRUDE",    label:"Crude Preheat\nExchangers",  rank:5,  tailPct:0.2,  eal:310000,  tvar:400000,  lambda:2.6, cv:0.7, tier:"med"},
+  {id:"VDU-PUMP",    label:"VDU Bottoms\nPumps",         rank:6,  tailPct:0.1,  eal:260000,  tvar:330000,  lambda:1.9, cv:0.8, tier:"med"},
+  {id:"SWS-PUMP",    label:"Sour Water\nStripper",       rank:7,  tailPct:0.07, eal:190000,  tvar:240000,  lambda:1.2, cv:0.9, tier:"med"},
+  {id:"INST-AIR",    label:"Instrument\nAir System",     rank:8,  tailPct:0.03, eal:140000,  tvar:175000,  lambda:0.6, cv:0.6, tier:"low"},
+  {id:"CW-PUMP",     label:"Cooling Water\nPumps",       rank:9,  tailPct:0.02, eal:95000,   tvar:115000,  lambda:1.8, cv:0.5, tier:"low"},
+  {id:"FLARE-KO",    label:"Flare K/O\nDrum",            rank:10, tailPct:0.01, eal:72000,   tvar:88000,   lambda:0.3, cv:0.7, tier:"low"},
+  {id:"TRIG-COKE-HTR", label:"DCU Heater\n(Trigger)",    rank:null, tailPct:0.4, eal:320000, tvar:410000, lambda:0.9, cv:0.8, tier:"trigger"},
+  {id:"TRIG-POWER",    label:"MCC Power\nFeed (Trigger)", rank:null, tailPct:0.1, eal:180000, tvar:220000, lambda:0.5, cv:0.7, tier:"trigger"},
+  {id:"TRIG-STEAM",    label:"Steam Gen\n(Trigger)",      rank:null, tailPct:0.2, eal:210000, tvar:270000, lambda:1.1, cv:0.6, tier:"trigger"},
+];
+
+const LINKS = [
+  {source:"TRIG-COKE-HTR", target:"DCU-COKE-SL", type:"cascade"},
+  {source:"TRIG-COKE-HTR", target:"DCU-DRUMS",   type:"cascade"},
+  {source:"TRIG-POWER",    target:"CDU-AGOP",    type:"cascade"},
+  {source:"TRIG-POWER",    target:"FCC-REGEN",   type:"cascade"},
+  {source:"TRIG-STEAM",    target:"DCU-DRUMS",   type:"cascade"},
+  {source:"TRIG-STEAM",    target:"CDU-AGOP",    type:"cascade"},
+];
+
+// strategies store: { nodeId: [ {on, name, freq, sev, cost} ] }
+const STRATS = {};
+function getS(id){ return STRATS[id] || []; }
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+const TC={high:"#c0392b",med:"#e67e22",low:"#2980b9",trigger:"#8e44ad"};
+function nr(d){return d.tier==="trigger"?28:d.tier==="high"?22+d.tailPct*0.18:d.tier==="med"?18:14;}
+function fmt(v){return v>=1e6?`$${(v/1e6).toFixed(1)}M`:`$${(v/1000).toFixed(0)}K`;}
+function fmtPct(v){return `${v.toFixed(1)}%`;}
+function sid(l){return typeof l.source==="object"?l.source.id:l.source;}
+function tid(l){return typeof l.target==="object"?l.target.id:l.target;}
+function getNode(id){return NODES.find(n=>n.id===id);}
+function depsOf(id){return LINKS.filter(l=>sid(l)===id).map(l=>tid(l));}
+function triggersOf(id){return LINKS.filter(l=>tid(l)===id).map(l=>sid(l));}
+
+// Combined reductions from enabled strategies — multiplicative
+function calcCombined(strategies){
+  const enabled = strategies.filter(s=>s.on);
+  const freqFactor = enabled.reduce((acc,s)=>acc*(1-s.freq/100),1);
+  const sevFactor  = enabled.reduce((acc,s)=>acc*(1-s.sev/100),1);
+  const totalCost  = enabled.reduce((acc,s)=>acc+s.cost,0);
+  return {
+    freqRed: (1-freqFactor)*100,
+    sevRed:  (1-sevFactor)*100,
+    cost:    totalCost,
+    count:   enabled.length,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// 3D ENGINE — force simulation in x/y/z + perspective projection onto the SVG.
+// Mirrors the CRR™ WPF CrossAssetMitigationWindow implementation.
+// ══════════════════════════════════════════════════════════════════════════════
+
+// Seeded RNG so the layout is reproducible demo-to-demo
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rand=mulberry32(42);
+
+NODES.forEach(n=>{
+  n.x=(rand()-0.5)*360; n.y=(rand()-0.5)*360; n.z=(rand()-0.5)*360;
+  n.vx=0; n.vy=0; n.vz=0; n.pinned=false;
+  n.sx=0; n.sy=0; n.scale=1; n.rz=0;   // projection cache
+});
+LINKS.forEach(l=>{ l.s=getNode(l.source); l.t=getNode(l.target); });
+
+// Camera
+const FOCAL=1100, WORLD_R=340;
+const CAM_HOME={yaw:0.55,pitch:0.22,zoom:1,panX:0,panY:0};
+let yaw=CAM_HOME.yaw, pitch=CAM_HOME.pitch, zoom=CAM_HOME.zoom;
+let panX=CAM_HOME.panX, panY=CAM_HOME.panY;
+let autoSpin=true;
+let alpha=1.0;
+function reheat(){ alpha=Math.max(alpha,0.3); }
+
+// ── SVG scaffolding ───────────────────────────────────────────────────────────
+const svgEl=d3.select("#graph");
+const container=document.getElementById("svg-container");
+let W=container.clientWidth, H=container.clientHeight;
+svgEl.attr("viewBox",`0 0 ${W} ${H}`);
+
+const defs=svgEl.append("defs");
+[["gold","#C9943A"],["green","#27ae60"]].forEach(([n,c])=>{
+  defs.append("marker").attr("id",`arr-${n}`).attr("markerWidth",8).attr("markerHeight",8)
+      .attr("refX",6).attr("refY",3).attr("orient","auto")
+    .append("path").attr("d","M0,0 L0,6 L8,3 z").attr("fill",c).attr("opacity",0.85);
+});
+
+// Single group; children get depth-sorted (re-appended far→near) every frame
+const g=svgEl.append("g");
+
+const link=g.selectAll("path.link")
+  .data(LINKS).enter().append("path")
+  .attr("class","link cascade").attr("marker-end","url(#arr-gold)");
+
+const nodeG=g.selectAll(".node")
+  .data(NODES).enter().append("g").attr("class","node")
+  .on("click",(event,d)=>{ if(!dragMoved) openPanel(event,d); })
+  .on("dblclick",(event,d)=>{ d.pinned=false; reheat(); event.stopPropagation(); })
+  .on("mouseenter",showTip)
+  .on("mouseleave",()=>{document.getElementById("tooltip").style.display="none";});
+
+nodeG.append("circle").attr("r",d=>nr(d)).attr("fill",d=>TC[d.tier]+"cc").attr("stroke",d=>TC[d.tier]).attr("stroke-width",2);
+nodeG.filter(d=>d.rank&&d.rank<=3).append("text").attr("class","rank-lbl")
+  .attr("y",-4).attr("font-family","'Share Tech Mono',monospace").attr("font-size","10px")
+  .attr("fill","#C9943A").attr("text-anchor","middle").text(d=>`#${d.rank}`);
+nodeG.each(function(d){
+  const el=d3.select(this),parts=d.label.split("\n");
+  d._labelLines=parts.length;
+  parts.forEach((p,i)=>el.append("text").attr("class","name-lbl").attr("data-i",i)
+    .attr("font-size",d.tier==="trigger"?"10px":"11px")
+    .attr("fill",d.tier==="trigger"?"#c39bd3":"var(--text)").attr("text-anchor","middle").text(p));
+});
+
+// ── Physics (3D) ──────────────────────────────────────────────────────────────
+function stepPhysics(){
+  const REPULSION=9000, SPRING_K=0.04, REST_LEN=150, CENTER_G=0.02, DAMPING=0.88;
+
+  for(const n of NODES){ n.vx*=DAMPING; n.vy*=DAMPING; n.vz*=DAMPING; }
+
+  // O(n²) repulsion — fine at prototype scale (~13 nodes)
+  for(let i=0;i<NODES.length;i++){
+    for(let j=i+1;j<NODES.length;j++){
+      const a=NODES[i], b=NODES[j];
+      const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z;
+      const d2=dx*dx+dy*dy+dz*dz+1;
+      const dist=Math.sqrt(d2);
+      const f=REPULSION*alpha/d2;
+      const fx=f*dx/dist, fy=f*dy/dist, fz=f*dz/dist;
+      a.vx-=fx; a.vy-=fy; a.vz-=fz;
+      b.vx+=fx; b.vy+=fy; b.vz+=fz;
+    }
+  }
+
+  for(const l of LINKS){
+    const a=l.s, b=l.t;
+    const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z;
+    const dist=Math.sqrt(dx*dx+dy*dy+dz*dz)+0.001;
+    const f=(dist-REST_LEN)*SPRING_K*alpha;
+    const fx=f*dx/dist, fy=f*dy/dist, fz=f*dz/dist;
+    a.vx+=fx; a.vy+=fy; a.vz+=fz;
+    b.vx-=fx; b.vy-=fy; b.vz-=fz;
+  }
+
+  for(const n of NODES){
+    n.vx-=n.x*CENTER_G*alpha;
+    n.vy-=n.y*CENTER_G*alpha;
+    n.vz-=n.z*CENTER_G*alpha;
+  }
+
+  for(const n of NODES){
+    if(n.pinned) continue;
+    n.x+=n.vx; n.y+=n.vy; n.z+=n.vz;
+    const len=Math.sqrt(n.x*n.x+n.y*n.y+n.z*n.z);
+    if(len>WORLD_R){ const k=WORLD_R/len; n.x*=k; n.y*=k; n.z*=k; }
+  }
+}
+
+// ── Projection + render ───────────────────────────────────────────────────────
+function projectAndRender(){
+  const cx=W/2, cy=H/2;
+  const cosY=Math.cos(yaw), sinY=Math.sin(yaw);
+  const cosP=Math.cos(pitch), sinP=Math.sin(pitch);
+
+  for(const n of NODES){
+    // World → camera: yaw about Y, then pitch about X
+    const rx = n.x*cosY + n.z*sinY;
+    const rz1= -n.x*sinY + n.z*cosY;
+    const ry = n.y*cosP - rz1*sinP;
+    const rz = n.y*sinP + rz1*cosP;
+
+    const persp=FOCAL/Math.max(FOCAL+rz,80);
+    const s=persp*zoom;
+
+    n.sx=cx+panX+rx*s;
+    n.sy=cy+panY+ry*s;
+    n.scale=s;
+    n.rz=rz;
+    // Depth cue: nearer = brighter
+    const t=Math.min(Math.max((persp-0.62)/0.85,0),1);
+    n.opacity=0.38+0.62*t;
+  }
+
+  nodeG.each(function(d){
+    const el=this;
+    el.setAttribute("transform",`translate(${d.sx},${d.sy})`);
+    el.style.opacity=d.opacity;
+
+    const r=nr(d)*d.scale;
+    const circ=el.querySelector("circle");
+    circ.setAttribute("r",r);
+    circ.style.strokeWidth=Math.max(2*d.scale,0.75);
+
+    const gap=13, off=d._labelLines===1?0:-(gap/2);
+    el.querySelectorAll("text.name-lbl").forEach(t=>{
+      const i=+t.getAttribute("data-i");
+      t.setAttribute("y",r+12+i*gap+off);
+    });
+    const rk=el.querySelector("text.rank-lbl");
+    if(rk) rk.setAttribute("y",-4*d.scale);
+  });
+
+  link.each(function(l){
+    const a=l.s, b=l.t;
+    const dx=b.sx-a.sx, dy=b.sy-a.sy;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const gapEnd=nr(b)*b.scale+8;
+    this.setAttribute("d",`M${a.sx},${a.sy} L${b.sx-(dx/dist)*gapEnd},${b.sy-(dy/dist)*gapEnd}`);
+    const avg=(a.scale+b.scale)/2;
+    this.style.strokeWidth=Math.max((this.classList.contains("mitigated")?2.5:2)*avg,0.6);
+    this.style.opacity=Math.min(a.opacity,b.opacity);
+    l._rz=Math.max(a.rz,b.rz)+0.5;   // a line sorts just behind its nearer endpoint
+  });
+
+  // Depth sort: SVG paints in document order, so re-append far → near
+  const items=[];
+  link.each(function(l){ items.push({el:this,rz:l._rz}); });
+  nodeG.each(function(d){ items.push({el:this,rz:d.rz}); });
+  items.sort((p,q)=>q.rz-p.rz);
+  for(const it of items) g.node().appendChild(it.el);
+}
+
+// ── Animation loop ────────────────────────────────────────────────────────────
+let dragging=null, dragMoved=false;
+let rotating=false, panning=false;
+
+function frame(){
+  if(autoSpin && !dragging && !rotating && !panning) yaw+=0.0030;
+  if(alpha>=0.001){ stepPhysics(); alpha*=0.97; }
+  projectAndRender();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+// ── Interaction ───────────────────────────────────────────────────────────────
+const svgDom=document.getElementById("graph");
+function svgPoint(e){
+  const r=svgDom.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*(W/r.width), y:(e.clientY-r.top)*(H/r.height)};
+}
+
+// Node drag — moves the node in the camera plane via inverse camera rotation
+let dragStartScreen=null, dragStartWorld=null;
+
+nodeG.on("pointerdown",function(event,d){
+  if(event.button!==0) return;
+  dragging=d; dragMoved=false;
+  dragStartScreen=svgPoint(event);
+  dragStartWorld={x:d.x,y:d.y,z:d.z};
+  d.pinned=true;
+  this.setPointerCapture(event.pointerId);
+  event.stopPropagation();
+});
+nodeG.on("pointermove",function(event){
+  if(!dragging) return;
+  const p=svgPoint(event);
+  const dsx=p.x-dragStartScreen.x, dsy=p.y-dragStartScreen.y;
+  if(Math.sqrt(dsx*dsx+dsy*dsy)>4) dragMoved=true;
+
+  const s=Math.max(dragging.scale,0.05);
+  const ax=dsx/s, ay=dsy/s;
+  const cosY=Math.cos(yaw), sinY=Math.sin(yaw);
+  const cosP=Math.cos(pitch), sinP=Math.sin(pitch);
+  // Inverse rotation: Ry(-yaw) · Rx(-pitch) applied to camera-plane vector
+  const wx = ax*cosY + ay*sinP*sinY;
+  const wy = ay*cosP;
+  const wz = ax*sinY - ay*sinP*cosY;
+
+  dragging.x=dragStartWorld.x+wx;
+  dragging.y=dragStartWorld.y+wy;
+  dragging.z=dragStartWorld.z+wz;
+  reheat();
+  event.stopPropagation();
+});
+nodeG.on("pointerup",function(event){
+  if(!dragging) return;
+  if(!dragMoved) dragging.pinned=false;   // plain click: don't pin, panel opens via click handler
+  try{ this.releasePointerCapture(event.pointerId); }catch(_){}
+  dragging=null;
+  event.stopPropagation();
+});
+
+// Background: left-drag = trackball rotate, middle-drag = pan
+let rotStart=null, rot0=null, panStart=null, pan0=null;
+
+svgDom.addEventListener("pointerdown",e=>{
+  if(e.button===0){
+    rotating=true;
+    rotStart=svgPoint(e); rot0={yaw,pitch};
+    svgDom.setPointerCapture(e.pointerId);
+  } else if(e.button===1){
+    panning=true;
+    panStart=svgPoint(e); pan0={x:panX,y:panY};
+    svgDom.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+});
+svgDom.addEventListener("pointermove",e=>{
+  if(rotating){
+    const p=svgPoint(e);
+    yaw   = rot0.yaw   + (p.x-rotStart.x)*0.008;
+    pitch = Math.min(Math.max(rot0.pitch + (p.y-rotStart.y)*0.008,-1.35),1.35);
+  } else if(panning){
+    const p=svgPoint(e);
+    panX=pan0.x+(p.x-panStart.x);
+    panY=pan0.y+(p.y-panStart.y);
+  }
+});
+svgDom.addEventListener("pointerup",e=>{
+  if(rotating||panning){
+    rotating=false; panning=false;
+    try{ svgDom.releasePointerCapture(e.pointerId); }catch(_){}
+  }
+});
+
+// Cursor-centered zoom
+document.getElementById("svg-container").addEventListener("wheel",e=>{
+  e.preventDefault();
+  const factor=e.deltaY<0?1.1:1/1.1;
+  const newZoom=Math.min(Math.max(zoom*factor,0.2),4.0);
+  const applied=newZoom/zoom;
+  if(Math.abs(applied-1)<1e-9) return;
+  const p=svgPoint(e);
+  const cx=W/2, cy=H/2;
+  panX=(p.x-cx)-((p.x-cx)-panX)*applied;
+  panY=(p.y-cy)-((p.y-cy)-panY)*applied;
+  zoom=newZoom;
+},{passive:false});
+
+// Header controls
+document.getElementById("btn-spin").addEventListener("click",e=>{
+  autoSpin=!autoSpin;
+  e.target.textContent=`AUTO-SPIN: ${autoSpin?"ON":"OFF"}`;
+  e.target.classList.toggle("on",autoSpin);
+});
+document.getElementById("btn-reset").addEventListener("click",()=>{
+  yaw=CAM_HOME.yaw; pitch=CAM_HOME.pitch; zoom=CAM_HOME.zoom;
+  panX=CAM_HOME.panX; panY=CAM_HOME.panY;
+  reheat();
+});
+
+// ── PANEL ─────────────────────────────────────────────────────────────────────
+let active=null;
+
+function openPanel(event,d){
+  event.stopPropagation();
+  active=d;
+  document.getElementById("p-name").textContent=d.label.replace("\n"," ");
+  document.getElementById("p-meta").textContent=
+    `λ=${d.lambda}/yr  |  EAL ${fmt(d.eal)}  |  TVaR ${fmt(d.tvar)}`+
+    (d.rank?`  |  Rank #${d.rank}`:"  |  Trigger");
+
+  renderStratTable();
+
+  // cascade context
+  const deps=depsOf(d.id),trigs=triggersOf(d.id);
+  const ciDiv=document.getElementById("p-cascade-info");
+  if(deps.length||trigs.length){
+    ciDiv.style.display="block";
+    document.getElementById("p-cascade-label").textContent=
+      deps.length&&trigs.length?"Cascade Relationships":deps.length?"Cascades To":"Triggered By";
+    let html="";
+    if(trigs.length) html+=`<div class="ci-row">← Triggered by: ${trigs.map(id=>{const n=getNode(id);return`<span>${n?n.label.replace("\n"," "):id}</span>`;}).join(", ")}</div>`;
+    if(deps.length){
+      html+=`<div class="ci-row"${trigs.length?' style="margin-top:6px"':""}>→ Cascades to: ${deps.map(id=>{const n=getNode(id);return`<span>${n?n.label.replace("\n"," "):id}</span>`;}).join(", ")}</div>`;
+      html+=`<div class="ci-row" style="margin-top:4px;font-size:10px;color:#5a7090">Mitigating this trigger reduces dependent failure frequency</div>`;
+    }
+    document.getElementById("p-cascade-body").innerHTML=html;
+  } else { ciDiv.style.display="none"; }
+
+  document.getElementById("panel").classList.add("open");
+}
+
+function renderStratTable(){
+  if(!active) return;
+  const strats=getS(active.id);
+  const tbody=document.getElementById("strat-tbody");
+  tbody.innerHTML="";
+  strats.forEach((s,i)=>{
+    const tr=document.createElement("tr");
+    if(!s.on) tr.classList.add("disabled");
+    tr.innerHTML=`
+      <td><input type="checkbox" class="strat-cb" data-i="${i}" ${s.on?"checked":""}></td>
+      <td><input class="ti name-ti" data-i="${i}" data-f="name" value="${s.name}" placeholder="Strategy name"></td>
+      <td><input class="ti" data-i="${i}" data-f="freq" type="number" min="0" max="100" value="${s.freq||""}" placeholder="0"></td>
+      <td><input class="ti" data-i="${i}" data-f="sev"  type="number" min="0" max="100" value="${s.sev||""}"  placeholder="0"></td>
+      <td><input class="ti" data-i="${i}" data-f="cost" type="number" min="0" value="${s.cost||""}" placeholder="0"></td>
+      <td><button class="row-del" data-i="${i}">×</button></td>`;
+    tbody.appendChild(tr);
+  });
+
+  // attach listeners
+  tbody.querySelectorAll(".strat-cb").forEach(el=>{
+    el.addEventListener("change",e=>{
+      const i=+e.target.dataset.i;
+      getS(active.id)[i].on=e.target.checked;
+      e.target.closest("tr").classList.toggle("disabled",!e.target.checked);
+      updateResultsBar();
+    });
+  });
+  tbody.querySelectorAll(".ti").forEach(el=>{
+    el.addEventListener("input",e=>{
+      const i=+e.target.dataset.i, f=e.target.dataset.f;
+      const s=getS(active.id)[i];
+      s[f]=f==="name"?e.target.value:parseFloat(e.target.value)||0;
+      updateResultsBar();
+    });
+  });
+  tbody.querySelectorAll(".row-del").forEach(el=>{
+    el.addEventListener("click",e=>{
+      const i=+e.target.dataset.i;
+      getS(active.id).splice(i,1);
+      renderStratTable();
+      updateResultsBar();
+    });
+  });
+  updateResultsBar();
+}
+
+function updateResultsBar(){
+  if(!active) return;
+  const c=calcCombined(getS(active.id));
+  document.getElementById("rb-freq").textContent=fmtPct(c.freqRed);
+  document.getElementById("rb-sev").textContent =fmtPct(c.sevRed);
+  document.getElementById("rb-cost").textContent=fmt(c.cost);
+  document.getElementById("rb-on").textContent  =c.count;
+
+  const d=active;
+  const roiBox=document.getElementById("p-roi");
+  if(c.cost>0&&c.count>0){
+    const ealRed =d.eal *(1-(1-c.freqRed/100)*(1-c.sevRed/100));
+    const tvarRed=d.tvar*(1-(1-c.freqRed/100)*(1-c.sevRed/100));
+    const roi=tvarRed/c.cost;
+    document.getElementById("r-eal").textContent =fmt(ealRed);
+    document.getElementById("r-tvar").textContent=fmt(tvarRed);
+    document.getElementById("r-roi").textContent =`${roi.toFixed(2)}x`;
+    roiBox.classList.add("show");
+  } else { roiBox.classList.remove("show"); }
+}
+
+document.getElementById("btn-add-row").addEventListener("click",()=>{
+  if(!active) return;
+  if(!STRATS[active.id]) STRATS[active.id]=[];
+  STRATS[active.id].push({on:true,name:"",freq:0,sev:0,cost:0});
+  renderStratTable();
+});
+
+document.getElementById("ph-close").addEventListener("click",()=>document.getElementById("panel").classList.remove("open"));
+
+document.getElementById("p-apply").addEventListener("click",()=>{
+  if(!active) return;
+  // prune empty rows
+  const cleaned=(STRATS[active.id]||[]).filter(s=>s.name||s.freq||s.sev||s.cost);
+  if(cleaned.length) STRATS[active.id]=cleaned;
+  else delete STRATS[active.id];
+  refresh(); summarize();
+  document.getElementById("panel").classList.remove("open");
+});
+
+document.getElementById("p-clear").addEventListener("click",()=>{
+  if(!active) return;
+  delete STRATS[active.id];
+  refresh(); summarize();
+  document.getElementById("panel").classList.remove("open");
+});
+
+// ── VISUALS ───────────────────────────────────────────────────────────────────
+function hasActiveMit(id){
+  const s=getS(id); return s.some(x=>x.on&&(x.freq||x.sev||x.cost));
+}
+function refresh(){
+  nodeG.select("circle")
+    .attr("stroke",d=>hasActiveMit(d.id)?"#27ae60":TC[d.tier])
+    .attr("fill",  d=>hasActiveMit(d.id)?"#27ae6088":TC[d.tier]+"cc");
+  link.attr("class",l=>{
+    const s=sid(l); return `link cascade${hasActiveMit(s)?" mitigated":""}`;
+  }).attr("marker-end",l=>hasActiveMit(sid(l))?"url(#arr-green)":"url(#arr-gold)");
+}
+
+function summarize(){
+  let spend=0,tvarRed=0;
+  for(const [id,strats] of Object.entries(STRATS)){
+    const n=getNode(id); if(!n) continue;
+    const c=calcCombined(strats);
+    spend+=c.cost;
+    tvarRed+=n.tvar*(1-(1-c.freqRed/100)*(1-c.sevRed/100));
+  }
+  const roi=spend>0?tvarRed/spend:0;
+  document.getElementById("s-spend").textContent=spend>0?fmt(spend):"$0";
+  document.getElementById("s-red").textContent  =tvarRed>0?fmt(tvarRed):"$0";
+  document.getElementById("s-roi").textContent  =roi>0?`${roi.toFixed(2)}x`:"—";
+}
+
+// ── TOOLTIP ───────────────────────────────────────────────────────────────────
+function showTip(event,d){
+  const deps=depsOf(d.id),trigs=triggersOf(d.id);
+  const strats=getS(d.id),c=calcCombined(strats);
+  const lines=[
+    `<b>${d.label.replace("\n"," ")}</b>`,
+    `Tier: ${d.tier.toUpperCase()}`,
+    d.rank?`Tail Rank #${d.rank}  (${d.tailPct}% of tail)`:"Role: Trigger",
+    `EAL ${fmt(d.eal)}  |  TVaR ${fmt(d.tvar)}`,
+    `λ=${d.lambda}/yr  CV=${d.cv}`,
+  ];
+  if(trigs.length) lines.push(`← Triggered by: ${trigs.map(id=>{const n=getNode(id);return n?n.label.replace("\n"," "):id;}).join(", ")}`);
+  if(deps.length)  lines.push(`→ Cascades to: ${deps.map(id=>{const n=getNode(id);return n?n.label.replace("\n"," "):id;}).join(", ")}`);
+  if(strats.length){
+    const enabled=strats.filter(s=>s.on);
+    lines.push(`<span style="color:#27ae60">✓ ${enabled.length}/${strats.length} strategies active · Freq↓${fmtPct(c.freqRed)} Sev↓${fmtPct(c.sevRed)} ${fmt(c.cost)}/yr</span>`);
+  }
+  lines.push(`<span style="color:#C9943A">CLICK to edit strategies</span>`);
+  const tt=document.getElementById("tooltip");
+  tt.innerHTML=lines.join("<br>");
+  tt.style.cssText=`display:block;left:${event.clientX+14}px;top:${event.clientY-10}px;`;
+}
+
+window.addEventListener("resize",()=>{
+  W=container.clientWidth; H=container.clientHeight;
+  svgEl.attr("viewBox",`0 0 ${W} ${H}`);
+  reheat();
+});
+</script>
+</body>
+</html>
