@@ -392,7 +392,7 @@ body {
   overflow: hidden;
   /* 16:9 but clamp height so it doesn't go too tall on wide screens */
   aspect-ratio: 16 / 9;
-  max-height: 75vh;
+  max-height: 56.25vh;
 }
 
 .crr-video-stage iframe {
@@ -1064,11 +1064,12 @@ const pipsWrap  = document.getElementById('crr-pips');
 const items     = Array.from(thumbs.querySelectorAll('.crr-item'));
 const N         = items.length;
 let activeIdx   = 0;
+let userHasInteracted = false;
 
 items.forEach((_, i) => {
   const pip = document.createElement('button');
   pip.className = 'crr-pip';
-  pip.addEventListener('click', () => { goTo(i); resetProgress(); });
+  pip.addEventListener('click', () => { userHasInteracted = true; goTo(i); resetProgress(); });
   pipsWrap.appendChild(pip);
 });
 
@@ -1092,8 +1093,9 @@ function updateStage() {
 
 function updateThumbs() {
   items.forEach((el, i) => el.classList.toggle('active', i === activeIdx));
-  const active = items[activeIdx];
-  active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  if (userHasInteracted) {
+    items[activeIdx].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }
 }
 
 function updatePips() {
@@ -1104,11 +1106,11 @@ function updatePips() {
 function next() { goTo(activeIdx + 1); }
 function prev() { goTo(activeIdx - 1); }
 
-document.getElementById('crr-next').addEventListener('click', () => { next(); resetProgress(); });
-document.getElementById('crr-prev').addEventListener('click', () => { prev(); resetProgress(); });
+document.getElementById('crr-next').addEventListener('click', () => { userHasInteracted = true; next(); resetProgress(); });
+document.getElementById('crr-prev').addEventListener('click', () => { userHasInteracted = true; prev(); resetProgress(); });
 
 items.forEach((el, i) => {
-  el.addEventListener('click', () => { goTo(i); resetProgress(); });
+  el.addEventListener('click', () => { userHasInteracted = true; goTo(i); resetProgress(); });
 });
 
 stage.addEventListener('click', e => {
