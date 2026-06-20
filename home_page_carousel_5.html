@@ -1371,22 +1371,21 @@ const VIDEOS = [
   {
     id: "cqwjfE5EhzE",
     above: "<strong style=\"color:#C9943A;font-weight:600;\">iARM\u2122 and the CRR\u2122 engine quantify unplanned OpEx cost risk.</strong> They model operational event history as a probability distribution and translate it into quantified financial exposure\u2014the same language used in reinsurance, credit, and market risk.",
-    capLabel: "iARM™ CRR™ LIVE DEMO",
+    capLabel: "LIVE DEMO",
     capTitle: "CRR\u2122 in Action \u2014 iARM Framework Walkthrough"
   },
   {
-    id: "tS6eECumcw4",
-    above: "<strong style=\"color:#C9943A;font-weight:600;\">Second video description goes here.</strong> Replace the id and this text with your next video.",
-    capLabel: "iARM™ CRR™: Resumen General",
-    capTitle: "iARM Framework \u2014 Overview"
+    id: "msSqXzJ6FEA",
+    above: "<strong style=\"color:#C9943A;font-weight:600;\">Add this video's description here.</strong> Edit the text in the VIDEOS array to describe this clip.",
+    capLabel: "VIDEO",
+    capTitle: "Video Title"
   },
   {
-    id: "msSqXzJ6FEA",
-    above: "<strong style=\"color:#C9943A;font-weight:600;\">Second video description goes here.</strong> Replace the id and this text with your next video.",
-    capLabel: "iARM™ CRR™: Aperçu Général",
-    capTitle: "iARM Framework \u2014 Overview"
+    id: "tS6eECumcw4",
+    above: "<strong style=\"color:#C9943A;font-weight:600;\">Add this video's description here.</strong> Edit the text in the VIDEOS array to describe this clip.",
+    capLabel: "VIDEO",
+    capTitle: "Video Title"
   }
-
 ];
 
 const VID_INTERVAL = 12000;
@@ -1402,7 +1401,7 @@ let vTimer;
 
 VIDEOS.forEach((_, i) => {
   const pip = document.createElement('button');
-  pip.addEventListener('click', () => { vGoTo(i); vResetTimer(); });
+  pip.addEventListener('click', () => { vGoTo(i); });
   vPips.appendChild(pip);
 });
 
@@ -1425,18 +1424,14 @@ function vNext() { vGoTo(vIdx + 1); }
 function vPrev() { vGoTo(vIdx - 1); }
 
 function vResetTimer() {
+  /* Auto-advance disabled — navigation is manual via arrows/pips only. */
   clearInterval(vTimer);
-  if (VIDEOS.length > 1) vTimer = setInterval(vNext, VID_INTERVAL);
 }
 
-document.getElementById('crr-vid-next').addEventListener('click', () => { vNext(); vResetTimer(); });
-document.getElementById('crr-vid-prev').addEventListener('click', () => { vPrev(); vResetTimer(); });
-
-vSection.addEventListener('mouseenter', () => clearInterval(vTimer));
-vSection.addEventListener('mouseleave', () => vResetTimer());
+document.getElementById('crr-vid-next').addEventListener('click', () => { vNext(); });
+document.getElementById('crr-vid-prev').addEventListener('click', () => { vPrev(); });
 
 vGoTo(0);
-vResetTimer();
 
 if (VIDEOS.length < 2) {
   document.getElementById('crr-vid-prev').style.display = 'none';
