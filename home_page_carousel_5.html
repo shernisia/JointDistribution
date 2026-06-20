@@ -1376,15 +1376,15 @@ const VIDEOS = [
   },
   {
     id: "msSqXzJ6FEA",
-    above: "<strong style=\"color:#C9943A;font-weight:600;\">Add this video's description here.</strong> Edit the text in the VIDEOS array to describe this clip.",
-    capLabel: "VIDEO",
-    capTitle: "Video Title"
+    above: "",
+    capLabel: "",
+    capTitle: ""
   },
   {
     id: "tS6eECumcw4",
-    above: "<strong style=\"color:#C9943A;font-weight:600;\">Add this video's description here.</strong> Edit the text in the VIDEOS array to describe this clip.",
-    capLabel: "VIDEO",
-    capTitle: "Video Title"
+    above: "",
+    capLabel: "",
+    capTitle: ""
   }
 ];
 
@@ -1417,6 +1417,10 @@ function vGoTo(i) {
   vLabel.textContent = v.capLabel;
   vTitle.textContent = v.capTitle;
   vYt.href = `https://youtu.be/${v.id}`;
+  /* Hide empty text areas so blank captions don't leave gaps */
+  vAbove.parentElement.style.display = v.above ? '' : 'none';
+  vLabel.style.display = v.capLabel ? '' : 'none';
+  vTitle.style.display = v.capTitle ? '' : 'none';
   vPips.querySelectorAll('button').forEach((p, k) => p.classList.toggle('active', k === vIdx));
 }
 
