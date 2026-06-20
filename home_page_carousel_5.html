@@ -408,6 +408,54 @@ body {
   display: block;
 }
 
+/* Carousel nav arrows over the stage */
+.crr-vid-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,148,58,0.5);
+  background: rgba(10,35,66,0.72);
+  color: var(--gold2);
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+  backdrop-filter: blur(2px);
+}
+.crr-vid-nav:hover { background: rgba(201,148,58,0.9); color: var(--navy); }
+.crr-vid-prev { left: 16px; }
+.crr-vid-next { right: 16px; }
+
+/* Pips under the video */
+.crr-vid-pips {
+  display: flex;
+  justify-content: center;
+  gap: 9px;
+  padding: 14px 0 2px;
+  background: var(--navy);
+}
+.crr-vid-pips button {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid rgba(201,148,58,0.5);
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+.crr-vid-pips button.active {
+  background: var(--gold);
+  box-shadow: 0 0 8px rgba(201,148,58,0.6);
+  transform: scale(1.15);
+}
+
 /* Gold progress bar under stage */
 .crr-video-progress {
   height: 2px;
@@ -1022,29 +1070,31 @@ body {
 
 </div>
 
-<!-- VIDEO SECTION -->
-<div class="crr-video-section">
+<!-- VIDEO SECTION (CAROUSEL) -->
+<div class="crr-video-section" id="crr-vid-section">
 
   <!-- Description above the video -->
   <div class="crr-video-above">
-    <p class="crr-video-above-text">
-      <strong style="color:#C9943A;font-weight:600;">iARM&#x2122; and the CRR&#x2122; engine quantify unplanned OpEx cost risk.</strong>
-      They model operational event history as a probability distribution and translate it into quantified financial exposure&#x2014;the same language used in reinsurance, credit, and market risk.
-    </p>
+    <p class="crr-video-above-text" id="crr-vid-above"></p>
   </div>
 
   <!-- Full-width video stage -->
   <div class="crr-video-stage">
-    <iframe
-      src="https://www.youtube.com/embed/cqwjfE5EhzE?autoplay=1&mute=1&loop=1&playlist=cqwjfE5EhzE&rel=0&modestbranding=1&controls=1&color=white"
+    <button class="crr-vid-nav crr-vid-prev" id="crr-vid-prev" aria-label="Previous video">&#10094;</button>
+    <iframe id="crr-vid-frame"
+      src=""
       title="CRR™ — iARM Framework Demo"
       allow="autoplay; encrypted-media; picture-in-picture"
       allowfullscreen>
     </iframe>
+    <button class="crr-vid-nav crr-vid-next" id="crr-vid-next" aria-label="Next video">&#10095;</button>
   </div>
 
   <!-- Gold progress accent -->
   <div class="crr-video-progress"></div>
+
+  <!-- Pips -->
+  <div class="crr-vid-pips" id="crr-vid-pips"></div>
 
   <!-- Text + caption below the video -->
   <div class="crr-video-below">
@@ -1063,11 +1113,11 @@ body {
       <span>Communicate</span>
     </div>
     <div class="crr-video-caption">
-      <span class="crr-video-label">LIVE DEMO</span>
+      <span class="crr-video-label" id="crr-vid-cap-label">LIVE DEMO</span>
       <span class="crr-video-rule"></span>
-      <span class="crr-video-title">CRR™ in Action — iARM Framework Walkthrough</span>
+      <span class="crr-video-title" id="crr-vid-cap-title"></span>
       <span class="crr-video-rule"></span>
-      <a class="crr-video-yt" href="https://youtu.be/cqwjfE5EhzE" target="_blank" rel="noopener">
+      <a class="crr-video-yt" id="crr-vid-yt" href="#" target="_blank" rel="noopener">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
         Watch on YouTube
       </a>
@@ -1314,6 +1364,85 @@ stage.addEventListener('mouseleave', () => startTimer());
 
 goTo(0);
 startTimer();
+
+/* ===== VIDEO CAROUSEL ===== */
+/* Edit this array to add/remove videos and set each one's text. */
+const VIDEOS = [
+  {
+    id: "cqwjfE5EhzE",
+    above: "<strong style=\"color:#C9943A;font-weight:600;\">iARM\u2122 and the CRR\u2122 engine quantify unplanned OpEx cost risk.</strong> They model operational event history as a probability distribution and translate it into quantified financial exposure\u2014the same language used in reinsurance, credit, and market risk.",
+    capLabel: "iARM™ CRR™ LIVE DEMO",
+    capTitle: "CRR\u2122 in Action \u2014 iARM Framework Walkthrough"
+  },
+  {
+    id: "tS6eECumcw4",
+    above: "<strong style=\"color:#C9943A;font-weight:600;\">Second video description goes here.</strong> Replace the id and this text with your next video.",
+    capLabel: "iARM™ CRR™: Resumen General",
+    capTitle: "iARM Framework \u2014 Overview"
+  },
+  {
+    id: "msSqXzJ6FEA",
+    above: "<strong style=\"color:#C9943A;font-weight:600;\">Second video description goes here.</strong> Replace the id and this text with your next video.",
+    capLabel: "iARM™ CRR™: Aperçu Général",
+    capTitle: "iARM Framework \u2014 Overview"
+  }
+
+];
+
+const VID_INTERVAL = 12000;
+const vFrame  = document.getElementById('crr-vid-frame');
+const vAbove  = document.getElementById('crr-vid-above');
+const vLabel  = document.getElementById('crr-vid-cap-label');
+const vTitle  = document.getElementById('crr-vid-cap-title');
+const vYt     = document.getElementById('crr-vid-yt');
+const vPips   = document.getElementById('crr-vid-pips');
+const vSection= document.getElementById('crr-vid-section');
+let vIdx = 0;
+let vTimer;
+
+VIDEOS.forEach((_, i) => {
+  const pip = document.createElement('button');
+  pip.addEventListener('click', () => { vGoTo(i); vResetTimer(); });
+  vPips.appendChild(pip);
+});
+
+function vEmbedSrc(v) {
+  return `https://www.youtube.com/embed/${v.id}?autoplay=1&mute=1&loop=1&playlist=${v.id}&rel=0&modestbranding=1&controls=1&color=white`;
+}
+
+function vGoTo(i) {
+  vIdx = (i + VIDEOS.length) % VIDEOS.length;
+  const v = VIDEOS[vIdx];
+  vFrame.src = vEmbedSrc(v);
+  vAbove.innerHTML = v.above;
+  vLabel.textContent = v.capLabel;
+  vTitle.textContent = v.capTitle;
+  vYt.href = `https://youtu.be/${v.id}`;
+  vPips.querySelectorAll('button').forEach((p, k) => p.classList.toggle('active', k === vIdx));
+}
+
+function vNext() { vGoTo(vIdx + 1); }
+function vPrev() { vGoTo(vIdx - 1); }
+
+function vResetTimer() {
+  clearInterval(vTimer);
+  if (VIDEOS.length > 1) vTimer = setInterval(vNext, VID_INTERVAL);
+}
+
+document.getElementById('crr-vid-next').addEventListener('click', () => { vNext(); vResetTimer(); });
+document.getElementById('crr-vid-prev').addEventListener('click', () => { vPrev(); vResetTimer(); });
+
+vSection.addEventListener('mouseenter', () => clearInterval(vTimer));
+vSection.addEventListener('mouseleave', () => vResetTimer());
+
+vGoTo(0);
+vResetTimer();
+
+if (VIDEOS.length < 2) {
+  document.getElementById('crr-vid-prev').style.display = 'none';
+  document.getElementById('crr-vid-next').style.display = 'none';
+  vPips.style.display = 'none';
+}
 </script>
 
 </body>
