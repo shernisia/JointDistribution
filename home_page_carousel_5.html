@@ -388,72 +388,177 @@ body {
   margin: 0 auto;
 }
 
-/* Full-width video stage */
+/* Active stage (poster image + play button + overlay) */
 .crr-video-stage {
   position: relative;
   width: 100%;
-  background: #000;
+  background: #060F1A;
   overflow: hidden;
-  /* 16:9 but clamp height so it doesn't go too tall on wide screens */
   aspect-ratio: 16 / 9;
   max-height: 56.25vh;
+  cursor: pointer;
 }
 
-.crr-video-stage iframe {
+.crr-vid-active-img {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  transition: background-image 0.35s ease;
+}
+
+/* YouTube iframe (hidden until play) */
+.crr-vid-iframe-wrap {
   position: absolute;
   inset: 0;
+  display: none;
+}
+.crr-vid-iframe-wrap.visible { display: block; }
+.crr-vid-iframe-wrap iframe {
   width: 100%;
   height: 100%;
   border: none;
   display: block;
 }
 
-/* Carousel nav arrows over the stage */
-.crr-vid-nav {
+/* Text overlay on the poster */
+.crr-vid-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 56%;
+  padding: 36px 48px;
+  background: linear-gradient(to right, rgba(10,35,66,0.97) 65%, transparent 100%);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  pointer-events: none;
+}
+.crr-vid-overlay .pillar-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.crr-vid-overlay .card-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(1.5rem, 2.5vw, 2.2rem);
+  color: var(--white);
+  line-height: 1.15;
+  margin-bottom: 10px;
+}
+.crr-vid-overlay .click-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.12em;
+  color: rgba(201,148,58,0.65);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.crr-vid-overlay .click-hint::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 1px;
+  background: var(--gold);
+  opacity: 0.5;
+}
+.crr-vid-overlay.animate .pillar-label { animation: crrVidSlideUp 0.5s ease 0.05s both; }
+.crr-vid-overlay.animate .card-name    { animation: crrVidSlideUp 0.5s ease 0.18s both; }
+.crr-vid-overlay.animate .click-hint   { animation: crrVidSlideUp 0.5s ease 0.30s both; }
+
+@keyframes crrVidSlideUp {
+  from { opacity:0; transform:translateY(20px); filter:blur(4px); }
+  to   { opacity:1; transform:translateY(0);    filter:blur(0); }
+}
+
+/* Centered play button */
+.crr-vid-play-btn {
   position: absolute;
   top: 50%;
-  transform: translateY(-50%);
-  z-index: 5;
-  width: 46px;
-  height: 46px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: rgba(201,148,58,0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 6px 32px rgba(201,148,58,0.45),
+    0 2px 12px rgba(0,0,0,0.4);
+  transition: transform 0.2s, background 0.2s;
+  pointer-events: none;
+}
+.crr-vid-play-btn svg { fill: #060F1A; margin-left: 5px; }
+
+/* Hide play/overlay while playing */
+.crr-video-stage.playing .crr-vid-play-btn,
+.crr-video-stage.playing .crr-vid-overlay { display: none; }
+
+/* Stage nav buttons (bottom-right) */
+.crr-vid-stage-btns {
+  position: absolute;
+  bottom: 20px;
+  right: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  z-index: 20;
+}
+.crr-video-stage.playing .crr-vid-stage-btns { display: none; }
+
+.crr-vid-btn {
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   border: 1px solid rgba(201,148,58,0.5);
-  background: rgba(10,35,66,0.72);
-  color: var(--gold2);
-  font-size: 18px;
+  background: rgba(10,35,66,0.85);
+  backdrop-filter: blur(8px);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: background 0.2s, color 0.2s, transform 0.2s;
-  backdrop-filter: blur(2px);
+  color: var(--gold);
+  transition: all 0.22s;
+  box-shadow:
+    0 4px 16px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.06);
 }
-.crr-vid-nav:hover { background: rgba(201,148,58,0.9); color: var(--navy); }
-.crr-vid-prev { left: 16px; }
-.crr-vid-next { right: 16px; }
+.crr-vid-btn:hover {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--navy);
+  transform: translateY(-1px);
+}
+.crr-vid-btn svg {
+  width: 14px; height: 14px;
+  stroke: currentColor; stroke-width: 2.5;
+  fill: none; stroke-linecap: round; stroke-linejoin: round;
+}
 
-/* Pips under the video */
+/* Pips */
 .crr-vid-pips {
   display: flex;
-  justify-content: center;
-  gap: 9px;
-  padding: 14px 0 2px;
-  background: var(--navy);
+  align-items: center;
+  gap: 7px;
 }
-.crr-vid-pips button {
-  width: 9px;
-  height: 9px;
+.crr-vid-pip {
+  width: 6px; height: 6px;
   border-radius: 50%;
-  border: 1px solid rgba(201,148,58,0.5);
-  background: transparent;
-  padding: 0;
-  cursor: pointer;
-  transition: all 0.25s;
+  background: rgba(255,255,255,0.2);
+  border: none; cursor: pointer;
+  transition: all 0.3s; padding: 0;
 }
-.crr-vid-pips button.active {
+.crr-vid-pip.active {
   background: var(--gold);
-  box-shadow: 0 0 8px rgba(201,148,58,0.6);
-  transform: scale(1.15);
+  width: 20px;
+  border-radius: 3px;
+  box-shadow: 0 0 8px rgba(201,148,58,0.5);
 }
 
 /* Gold progress bar under stage */
@@ -461,7 +566,46 @@ body {
   height: 2px;
   background: linear-gradient(to right, var(--gold), #1A7A9A);
   box-shadow: 0 0 8px rgba(201,148,58,0.5);
-  width: 100%;
+  width: 0%;
+}
+
+/* Language selector row */
+.crr-vid-lang-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  padding: 20px 24px 22px;
+  background: rgba(0,0,0,0.3);
+  border-top: 1px solid rgba(201,148,58,0.15);
+}
+.crr-vid-lang-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: 'EB Garamond','Garamond','Times New Roman',serif;
+  font-size: clamp(15px,1.4vw,18px);
+  letter-spacing: 0.04em;
+  color: var(--blue-light);
+  background: rgba(10,35,66,0.6);
+  border: 1px solid rgba(201,148,58,0.35);
+  border-radius: 6px;
+  padding: 9px 18px;
+  cursor: pointer;
+  transition: all 0.22s;
+}
+.crr-vid-lang-btn .flag { font-size: 1.15em; line-height: 1; }
+.crr-vid-lang-btn:hover:not(.active) {
+  border-color: rgba(201,148,58,0.7);
+  color: #fff;
+  transform: translateY(-2px);
+}
+.crr-vid-lang-btn.active {
+  color: var(--navy);
+  background: var(--gold);
+  border-color: var(--gold);
+  box-shadow: 0 4px 18px rgba(201,148,58,0.4);
+  font-weight: 600;
 }
 
 /* Below-video panel */
@@ -502,66 +646,10 @@ body {
 
 .crr-dot { color: rgba(201,148,58,0.35); }
 
-/* Caption / watch-on-YT row */
-.crr-video-caption {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  margin-top: 8px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
-.crr-video-label {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.22em;
-  color: var(--gold);
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-
-.crr-video-rule {
-  display: block;
-  width: 36px;
-  height: 1px;
-  background: rgba(201,148,58,0.3);
-  flex-shrink: 0;
-}
-
-.crr-video-title {
-  font-family: 'EB Garamond', serif;
-  font-size: 1rem;
-  color: var(--blue-light);
-  letter-spacing: 0.03em;
-  white-space: nowrap;
-}
-
-.crr-video-yt {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 0.6rem;
-  letter-spacing: 0.14em;
-  color: var(--gold);
-  text-decoration: none;
-  border: 1px solid rgba(201,148,58,0.35);
-  padding: 5px 12px;
-  border-radius: 2px;
-  transition: background 0.2s, color 0.2s;
-  white-space: nowrap;
-}
-.crr-video-yt:hover {
-  background: rgba(201,148,58,0.12);
-  color: #fff;
-}
-
 @media (max-width: 640px) {
   .crr-video-above { padding: 24px 18px 20px; }
   .crr-video-below { padding: 18px 18px 24px; }
-  .crr-video-title { white-space: normal; text-align: center; }
-  .crr-video-rule  { display: none; }
+  .crr-vid-overlay { width: 72%; padding: 24px 24px; }
 }
 
 /* Dead rules from prior iterations — kept inert */
@@ -1078,25 +1166,46 @@ body {
     <p class="crr-video-above-text" id="crr-vid-above"></p>
   </div>
 
-  <!-- Full-width video stage -->
-  <div class="crr-video-stage">
-    <button class="crr-vid-nav crr-vid-prev" id="crr-vid-prev" aria-label="Previous video">&#10094;</button>
-    <iframe id="crr-vid-frame"
-      src=""
-      title="CRR™ — iARM Framework Demo"
-      allow="autoplay; encrypted-media; picture-in-picture"
-      allowfullscreen>
-    </iframe>
-    <button class="crr-vid-nav crr-vid-next" id="crr-vid-next" aria-label="Next video">&#10095;</button>
+  <!-- Active stage: poster + play button + overlay -->
+  <div class="crr-video-stage" id="crr-vid-stage">
+    <div class="crr-vid-active-img" id="crr-vid-active-img"></div>
+
+    <!-- YouTube iframe (hidden until play clicked) -->
+    <div class="crr-vid-iframe-wrap" id="crr-vid-iframe-wrap">
+      <iframe id="crr-vid-iframe" src="" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+    </div>
+
+    <!-- Overlay text -->
+    <div class="crr-vid-overlay" id="crr-vid-overlay">
+      <div class="pillar-label" id="crr-vid-ol-label">LIVE DEMO</div>
+      <div class="card-name" id="crr-vid-ol-name"></div>
+      <div class="click-hint">CLICK TO PLAY</div>
+    </div>
+
+    <!-- Play button -->
+    <div class="crr-vid-play-btn">
+      <svg width="26" height="26" viewBox="0 0 26 26"><polygon points="7,4 22,13 7,22"></polygon></svg>
+    </div>
+
+    <!-- Nav buttons -->
+    <div class="crr-vid-stage-btns">
+      <button class="crr-vid-btn" id="crr-vid-prev" aria-label="Previous">
+        <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"></polyline></svg>
+      </button>
+      <div class="crr-vid-pips" id="crr-vid-pips"></div>
+      <button class="crr-vid-btn" id="crr-vid-next" aria-label="Next">
+        <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"></polyline></svg>
+      </button>
+    </div>
   </div>
 
   <!-- Gold progress accent -->
-  <div class="crr-video-progress"></div>
+  <div class="crr-video-progress" id="crr-vid-progress"></div>
 
-  <!-- Pips -->
-  <div class="crr-vid-pips" id="crr-vid-pips"></div>
+  <!-- Language selector -->
+  <div class="crr-vid-lang-bar" id="crr-vid-lang-bar"></div>
 
-  <!-- Text + caption below the video -->
+  <!-- Text below the video -->
   <div class="crr-video-below">
     <div class="crr-video-tagline">
       <span>Know Your Worth</span>
@@ -1111,16 +1220,6 @@ body {
       <span>Mitigate</span>
       <span class="crr-dot">·</span>
       <span>Communicate</span>
-    </div>
-    <div class="crr-video-caption">
-      <span class="crr-video-label" id="crr-vid-cap-label">LIVE DEMO</span>
-      <span class="crr-video-rule"></span>
-      <span class="crr-video-title" id="crr-vid-cap-title"></span>
-      <span class="crr-video-rule"></span>
-      <a class="crr-video-yt" id="crr-vid-yt" href="#" target="_blank" rel="noopener">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 00-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 00.5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 002.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 002.1-2.1C24 15.9 24 12 24 12s0-3.9-.5-5.8zM9.7 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
-        Watch on YouTube
-      </a>
     </div>
   </div>
 
@@ -1365,82 +1464,133 @@ stage.addEventListener('mouseleave', () => startTimer());
 goTo(0);
 startTimer();
 
-/* ===== VIDEO CAROUSEL ===== */
-/* Edit this array to add/remove videos and set each one's text. */
+/* ===== VIDEO LANGUAGE SELECTOR (poster + play, choose language) ===== */
+/* To add a new language video, add one entry below. Each shares the same
+   walkthrough; only the YouTube `id` and language metadata change.
+   - lang:  language name shown on the button
+   - flag:  emoji flag (optional; set "" to omit)
+   - id:    YouTube video id for that language
+   - title: overlay title (optional)
+   - above: description shown above the player (optional, supports HTML) */
 const VIDEOS = [
   {
+    lang: "English",
+    flag: "\uD83C\uDDFA\uD83C\uDDF8",
     id: "cqwjfE5EhzE",
-    above: "<strong style=\"color:#C9943A;font-weight:600;\">iARM\u2122 and the CRR\u2122 engine quantify unplanned OpEx cost risk.</strong> They model operational event history as a probability distribution and translate it into quantified financial exposure\u2014the same language used in reinsurance, credit, and market risk.",
-    capLabel: "LIVE DEMO",
-    capTitle: "CRR\u2122 in Action \u2014 iARM Framework Walkthrough"
+    title: "CRR\u2122 in Action \u2014 iARM Framework Walkthrough",
+    above: "<strong style=\"color:#C9943A;font-weight:600;\">iARM\u2122 and the CRR\u2122 engine quantify unplanned OpEx cost risk.</strong> They model operational event history as a probability distribution and translate it into quantified financial exposure\u2014the same language used in reinsurance, credit, and market risk."
   },
   {
-    id: "msSqXzJ6FEA",
-    above: "",
-    capLabel: "",
-    capTitle: ""
-  },
-  {
+    lang: "Espa\u00F1ol",
+    flag: "\uD83C\uDDEA\uD83C\uDDF8",
     id: "tS6eECumcw4",
-    above: "",
-    capLabel: "",
-    capTitle: ""
+    title: "CRR\u2122 en Acci\u00F3n \u2014 Recorrido del Marco iARM",
+    above: "<strong style=\"color:#C9943A;font-weight:600;\">iARM\u2122 y el motor CRR\u2122 cuantifican el riesgo de costos de OpEx no planificados.</strong> Modelan el historial de eventos operativos como una distribuci\u00F3n de probabilidad y lo traducen en exposici\u00F3n financiera cuantificada."
+  },
+  {
+    lang: "Fran\u00E7ais",
+    flag: "\uD83C\uDDEB\uD83C\uDDF7",
+    id: "msSqXzJ6FEA",
+    title: "CRR\u2122 en Action \u2014 Pr\u00E9sentation du Cadre iARM",
+    above: "<strong style=\"color:#C9943A;font-weight:600;\">iARM\u2122 et le moteur CRR\u2122 quantifient le risque de co\u00FBts OpEx impr\u00E9vus.</strong> Ils mod\u00E9lisent l'historique des \u00E9v\u00E9nements op\u00E9rationnels comme une distribution de probabilit\u00E9 et le traduisent en exposition financi\u00E8re quantifi\u00E9e."
   }
 ];
 
-const VID_INTERVAL = 12000;
-const vFrame  = document.getElementById('crr-vid-frame');
-const vAbove  = document.getElementById('crr-vid-above');
-const vLabel  = document.getElementById('crr-vid-cap-label');
-const vTitle  = document.getElementById('crr-vid-cap-title');
-const vYt     = document.getElementById('crr-vid-yt');
-const vPips   = document.getElementById('crr-vid-pips');
-const vSection= document.getElementById('crr-vid-section');
+const vStage     = document.getElementById('crr-vid-stage');
+const vActiveImg = document.getElementById('crr-vid-active-img');
+const vOverlay   = document.getElementById('crr-vid-overlay');
+const vIframeWrap= document.getElementById('crr-vid-iframe-wrap');
+const vIframe    = document.getElementById('crr-vid-iframe');
+const vAbove     = document.getElementById('crr-vid-above');
+const vOlLabel   = document.getElementById('crr-vid-ol-label');
+const vOlName    = document.getElementById('crr-vid-ol-name');
+const vPips      = document.getElementById('crr-vid-pips');
+const vLangBar   = document.getElementById('crr-vid-lang-bar');
+const vN         = VIDEOS.length;
 let vIdx = 0;
-let vTimer;
+let vPlaying = false;
 
+/* Build pips */
 VIDEOS.forEach((_, i) => {
   const pip = document.createElement('button');
-  pip.addEventListener('click', () => { vGoTo(i); });
+  pip.className = 'crr-vid-pip';
+  pip.addEventListener('click', e => { e.stopPropagation(); vStopVideo(); vGoTo(i); });
   vPips.appendChild(pip);
 });
 
-function vEmbedSrc(v) {
-  return `https://www.youtube.com/embed/${v.id}?autoplay=1&mute=1&loop=1&playlist=${v.id}&rel=0&modestbranding=1&controls=1&color=white`;
-}
+/* Build language selector buttons */
+VIDEOS.forEach((v, i) => {
+  const btn = document.createElement('button');
+  btn.className = 'crr-vid-lang-btn';
+  btn.innerHTML = (v.flag ? `<span class="flag">${v.flag}</span>` : '') + `<span>${v.lang}</span>`;
+  btn.addEventListener('click', () => { vStopVideo(); vGoTo(i); });
+  vLangBar.appendChild(btn);
+});
+
+const vLangBtns = Array.from(vLangBar.querySelectorAll('.crr-vid-lang-btn'));
+const vPipEls   = Array.from(vPips.querySelectorAll('.crr-vid-pip'));
 
 function vGoTo(i) {
-  vIdx = (i + VIDEOS.length) % VIDEOS.length;
+  vIdx = ((i % vN) + vN) % vN;
   const v = VIDEOS[vIdx];
-  vFrame.src = vEmbedSrc(v);
-  vAbove.innerHTML = v.above;
-  vLabel.textContent = v.capLabel;
-  vTitle.textContent = v.capTitle;
-  vYt.href = `https://youtu.be/${v.id}`;
-  /* Hide empty text areas so blank captions don't leave gaps */
+
+  vActiveImg.style.backgroundImage = `url('https://img.youtube.com/vi/${v.id}/maxresdefault.jpg')`;
+
+  vOverlay.classList.remove('animate');
+  void vOverlay.offsetWidth;
+  vOverlay.classList.add('animate');
+  vOlLabel.textContent = v.lang || '';
+  vOlName.textContent  = v.title || '';
+  vOlLabel.style.display = v.lang ? '' : 'none';
+
+  vAbove.innerHTML = v.above || '';
   vAbove.parentElement.style.display = v.above ? '' : 'none';
-  vLabel.style.display = v.capLabel ? '' : 'none';
-  vTitle.style.display = v.capTitle ? '' : 'none';
-  vPips.querySelectorAll('button').forEach((p, k) => p.classList.toggle('active', k === vIdx));
+
+  vLangBtns.forEach((b, k) => b.classList.toggle('active', k === vIdx));
+  vPipEls.forEach((p, k) => p.classList.toggle('active', k === vIdx));
 }
 
-function vNext() { vGoTo(vIdx + 1); }
-function vPrev() { vGoTo(vIdx - 1); }
-
-function vResetTimer() {
-  /* Auto-advance disabled — navigation is manual via arrows/pips only. */
-  clearInterval(vTimer);
+function vPlayVideo() {
+  const v = VIDEOS[vIdx];
+  vIframe.src = `https://www.youtube.com/embed/${v.id}?autoplay=1&rel=0`;
+  vIframeWrap.classList.add('visible');
+  vStage.classList.add('playing');
+  vPlaying = true;
 }
 
-document.getElementById('crr-vid-next').addEventListener('click', () => { vNext(); });
-document.getElementById('crr-vid-prev').addEventListener('click', () => { vPrev(); });
+function vStopVideo() {
+  vIframe.src = '';
+  vIframeWrap.classList.remove('visible');
+  vStage.classList.remove('playing');
+  vPlaying = false;
+}
+
+/* Click stage to play / stop */
+vStage.addEventListener('click', e => {
+  if (e.target.closest('.crr-vid-btn') || e.target.closest('.crr-vid-pips')) return;
+  if (vPlaying) { vStopVideo(); return; }
+  vPlayVideo();
+});
+
+/* Prev / Next */
+document.getElementById('crr-vid-prev').addEventListener('click', e => { e.stopPropagation(); vStopVideo(); vGoTo(vIdx - 1); });
+document.getElementById('crr-vid-next').addEventListener('click', e => { e.stopPropagation(); vStopVideo(); vGoTo(vIdx + 1); });
+
+/* Touch swipe */
+let vTx = 0;
+vStage.addEventListener('touchstart', e => { vTx = e.touches[0].clientX; }, {passive:true});
+vStage.addEventListener('touchend', e => {
+  const d = vTx - e.changedTouches[0].clientX;
+  if (Math.abs(d) > 40 && !vPlaying) { vStopVideo(); d > 0 ? vGoTo(vIdx + 1) : vGoTo(vIdx - 1); }
+});
 
 vGoTo(0);
 
-if (VIDEOS.length < 2) {
+if (vN < 2) {
   document.getElementById('crr-vid-prev').style.display = 'none';
   document.getElementById('crr-vid-next').style.display = 'none';
   vPips.style.display = 'none';
+  vLangBar.style.display = 'none';
 }
 </script>
 
