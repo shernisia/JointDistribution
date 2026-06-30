@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Cross-Asset Mitigation — iARM</title>
+<title>Cross-Asset Mitigation 3D — iARM</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Barlow:wght@300;400;500&display=swap');
@@ -22,6 +22,9 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 .sep{width:1px;height:28px;background:rgba(201,148,58,0.3);}
 .hdr-title{font-family:'Rajdhani',sans-serif;font-size:15px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;}
 .badge{margin-left:auto;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold);background:rgba(201,148,58,0.1);border:1px solid rgba(201,148,58,0.3);padding:3px 10px;border-radius:2px;}
+.hdr-btn{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid rgba(201,148,58,0.25);padding:3px 10px;border-radius:2px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px;}
+.hdr-btn:hover{color:var(--gold);border-color:var(--gold);}
+.hdr-btn.on{color:var(--gold);background:rgba(201,148,58,0.12);border-color:rgba(201,148,58,0.5);}
 
 #legend{position:fixed;top:64px;left:16px;background:rgba(6,20,40,0.9);border:1px solid rgba(201,148,58,0.2);border-radius:4px;padding:12px 16px;z-index:50;font-size:12px;backdrop-filter:blur(6px);}
 .leg-title{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;color:var(--gold);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;}
@@ -31,7 +34,7 @@ body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(
 
 #hint{position:fixed;bottom:48px;left:16px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8;z-index:50;}
 #svg-container{position:fixed;top:52px;left:0;right:0;bottom:40px;z-index:1;}
-svg{width:100%;height:100%;}
+svg{width:100%;height:100%;display:block;touch-action:none;}
 
 .node circle{stroke-width:2;cursor:pointer;transition:filter 0.15s;}
 .node circle:hover{filter:brightness(1.35);}
@@ -51,48 +54,33 @@ svg{width:100%;height:100%;}
 .node-name{font-family:'Rajdhani',sans-serif;font-size:15px;font-weight:600;margin-bottom:3px;}
 .node-meta{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:14px;}
 .sec{font-family:'Rajdhani',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin:14px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(201,148,58,0.2);}
-
-/* ── STRATEGY TABLE ── */
 .strat-table{width:100%;border-collapse:collapse;font-size:11px;margin-bottom:8px;}
 .strat-table th{font-family:'Rajdhani',sans-serif;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:4px 6px;border-bottom:1px solid rgba(255,255,255,0.08);text-align:left;white-space:nowrap;}
 .strat-table th.num{text-align:right;}
 .strat-table td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,0.05);vertical-align:middle;}
 .strat-table tr:last-child td{border-bottom:none;}
 .strat-table tr.disabled td{opacity:0.4;}
-
-/* checkbox */
 .strat-cb{width:14px;height:14px;accent-color:var(--gold);cursor:pointer;}
-
-/* inline inputs inside table */
 .ti{width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(201,148,58,0.25);border-radius:2px;color:var(--text);font-family:'Share Tech Mono',monospace;font-size:11px;padding:3px 5px;text-align:right;outline:none;}
 .ti:focus{border-color:var(--gold);}
 .ti.name-ti{text-align:left;font-family:'Barlow',sans-serif;}
-
-/* add / remove row */
 .row-del{background:none;border:none;color:#e74c3c;cursor:pointer;font-size:14px;padding:0 2px;opacity:0.6;}
 .row-del:hover{opacity:1;}
 .btn-add-row{width:100%;margin-top:6px;padding:6px;background:rgba(201,148,58,0.06);border:1px dashed rgba(201,148,58,0.3);border-radius:3px;color:var(--muted);font-family:'Rajdhani',sans-serif;font-size:12px;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
 .btn-add-row:hover{background:rgba(201,148,58,0.12);color:var(--gold);}
-
-/* results bar */
 .results-bar{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding:9px 10px;background:rgba(201,148,58,0.08);border:1px solid rgba(201,148,58,0.2);border-radius:3px;}
 .rb-item{display:flex;flex-direction:column;align-items:center;flex:1;min-width:60px;}
 .rb-label{font-family:'Rajdhani',sans-serif;font-size:9px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:2px;}
 .rb-val{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--gold);}
 .rb-val.green{color:var(--green);}
-
-/* cascade info */
 .cascade-info{background:rgba(26,188,156,0.06);border:1px solid rgba(26,188,156,0.2);border-radius:3px;padding:10px 12px;margin-top:4px;}
 .ci-row{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);line-height:1.8;}
 .ci-row span{color:var(--text);}
-
-/* ROI */
 .roi-box{background:rgba(39,174,96,0.09);border:1px solid rgba(39,174,96,0.28);border-radius:3px;padding:9px 12px;margin-top:10px;display:none;}
 .roi-box.show{display:block;}
 .roi-row{display:flex;justify-content:space-between;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);margin-bottom:3px;}
 .roi-row .rv{color:#2ecc71;}
 .roi-row.big .rv{font-size:14px;font-weight:600;}
-
 .btn-apply{width:100%;margin-top:14px;padding:10px;background:linear-gradient(135deg,rgba(201,148,58,0.2),rgba(201,148,58,0.08));border:1px solid var(--gold);border-radius:3px;color:var(--gold);font-family:'Rajdhani',sans-serif;font-size:14px;font-weight:600;letter-spacing:1px;text-transform:uppercase;cursor:pointer;transition:all 0.2s;}
 .btn-apply:hover{background:rgba(201,148,58,0.28);box-shadow:0 0 12px rgba(201,148,58,0.25);}
 .btn-clear{width:100%;margin-top:6px;padding:7px;background:none;border:1px solid rgba(192,57,43,0.4);border-radius:3px;color:#e74c3c;font-family:'Rajdhani',sans-serif;font-size:12px;font-weight:500;letter-spacing:1px;text-transform:uppercase;cursor:pointer;}
@@ -105,6 +93,74 @@ svg{width:100%;height:100%;}
 .sl{color:var(--muted);}
 .sv{color:var(--gold);}
 .sv.g{color:var(--green);}
+
+/* ══════════════════════════ EXPLANATION DRAWER ══════════════════════════ */
+#btn-guide{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);background:rgba(255,255,255,0.04);border:1px solid rgba(201,148,58,0.25);padding:3px 10px;border-radius:2px;cursor:pointer;transition:all 0.15s;letter-spacing:0.5px;}
+#btn-guide:hover{color:var(--gold);border-color:var(--gold);}
+#btn-guide.on{color:var(--gold);background:rgba(201,148,58,0.12);border-color:rgba(201,148,58,0.5);}
+#exp-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,0.55);display:none;backdrop-filter:blur(2px);}
+#exp-overlay.open{display:block;}
+#exp-drawer{position:absolute;top:0;right:0;bottom:0;width:min(680px,92vw);background:rgba(6,14,26,0.98);border-left:1px solid rgba(201,148,58,0.2);overflow-y:auto;transform:translateX(100%);transition:transform .28s cubic-bezier(.22,.68,0,1.2);z-index:501;}
+#exp-overlay.open #exp-drawer{transform:translateX(0);}
+#exp-header{position:sticky;top:0;z-index:5;background:rgba(6,14,26,0.97);border-bottom:1px solid rgba(201,148,58,0.2);padding:16px 22px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(8px);}
+#exp-eyebrow{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-family:'Share Tech Mono',monospace;}
+#exp-heading{font-size:18px;font-weight:700;color:var(--text);letter-spacing:.02em;font-family:'Rajdhani',sans-serif;}
+#exp-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0 4px;line-height:1;transition:color .12s;}
+#exp-close:hover{color:var(--text);}
+#exp-body{padding:24px 28px 60px;}
+#exp-toc{background:rgba(201,148,58,0.04);border:1px solid rgba(201,148,58,0.15);border-radius:4px;padding:14px 18px;margin-bottom:32px;}
+#exp-toc-label{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-family:'Share Tech Mono',monospace;margin-bottom:10px;}
+#exp-toc ul{list-style:none;display:flex;flex-wrap:wrap;gap:5px 18px;padding:0;}
+#exp-toc a{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--teal);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .12s;}
+#exp-toc a:hover{border-color:var(--teal);}
+.exp-section{margin-bottom:36px;}
+.exp-h2{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;color:var(--text);letter-spacing:.5px;margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid rgba(201,148,58,0.2);}
+.exp-h3{font-size:10px;font-weight:700;color:var(--gold);letter-spacing:.14em;text-transform:uppercase;margin:20px 0 8px;font-family:'Share Tech Mono',monospace;}
+.exp-p{font-size:14px;color:var(--muted);line-height:1.75;margin-bottom:11px;}
+.exp-p:last-child{margin-bottom:0;}
+.exp-p strong{color:var(--text);}
+.exp-callout{border-left:3px solid var(--gold);background:rgba(201,148,58,0.05);border-radius:0 4px 4px 0;padding:11px 15px;margin:14px 0;}
+.exp-callout.teal{border-color:var(--teal);background:rgba(26,188,156,0.05);}
+.exp-callout.green{border-color:var(--green);background:rgba(39,174,96,0.05);}
+.exp-callout.red{border-color:var(--red);background:rgba(192,57,43,0.06);}
+.exp-callout-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;font-family:'Share Tech Mono',monospace;color:var(--gold);margin-bottom:5px;font-weight:700;}
+.exp-callout.teal .exp-callout-label{color:var(--teal);}
+.exp-callout.green .exp-callout-label{color:var(--green);}
+.exp-callout.red .exp-callout-label{color:var(--red);}
+.exp-callout p{font-size:13px;color:var(--muted);margin:0;line-height:1.65;}
+.exp-formula{background:rgba(0,0,0,0.4);border:1px solid rgba(41,128,185,0.3);border-radius:4px;padding:12px 16px;margin:11px 0;font-family:'Share Tech Mono',monospace;font-size:12px;color:#79c0ff;overflow-x:auto;line-height:1.8;}
+.exp-formula em{color:var(--muted);font-style:normal;}
+.exp-stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin:12px 0;}
+.exp-stat{background:rgba(201,148,58,0.04);border:1px solid rgba(201,148,58,0.15);border-radius:4px;padding:11px 13px;}
+.exp-stat-label{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-family:'Share Tech Mono',monospace;margin-bottom:4px;}
+.exp-stat-val{font-size:18px;font-weight:700;color:var(--gold);font-family:'Rajdhani',sans-serif;}
+.exp-stat-sub{font-size:11px;color:var(--teal);font-family:'Share Tech Mono',monospace;margin-top:2px;}
+.exp-table{width:100%;border-collapse:collapse;margin:11px 0;font-size:13px;}
+.exp-table th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-family:'Share Tech Mono',monospace;border-bottom:1px solid rgba(201,148,58,0.2);padding:7px 9px 7px 0;text-align:left;}
+.exp-table td{border-bottom:1px solid rgba(201,148,58,0.06);padding:7px 9px 7px 0;color:var(--muted);vertical-align:top;}
+.exp-table td:first-child{font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--teal);white-space:nowrap;}
+.exp-table tr:last-child td{border-bottom:none;}
+.exp-steps{margin:12px 0;}
+.exp-step{display:flex;gap:11px;margin-bottom:13px;align-items:flex-start;}
+.exp-step-num{flex-shrink:0;width:23px;height:23px;border-radius:50%;background:rgba(201,148,58,0.1);border:1px solid var(--gold);display:flex;align-items:center;justify-content:center;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--gold);margin-top:2px;}
+.exp-step-body strong{display:block;color:var(--text);font-size:14px;margin-bottom:3px;font-family:'Rajdhani',sans-serif;letter-spacing:.3px;}
+.exp-step-body span{font-size:13px;color:var(--muted);line-height:1.65;}
+.exp-feat{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:11px 0;padding:0;}
+.exp-feat li{background:rgba(201,148,58,0.04);border:1px solid rgba(201,148,58,0.15);border-radius:3px;padding:8px 11px;font-size:13px;color:var(--muted);}
+.exp-feat li::before{content:'\2192';color:var(--gold);margin-right:6px;}
+.exp-node-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:9px;margin:14px 0;}
+.exp-nc{background:rgba(201,148,58,0.04);border:1px solid rgba(201,148,58,0.15);border-radius:4px;padding:10px 12px;display:flex;align-items:flex-start;gap:9px;}
+.exp-nc-dot{width:13px;height:13px;border-radius:50%;flex-shrink:0;margin-top:3px;border:2px solid;}
+.exp-nc-name{font-family:'Rajdhani',sans-serif;font-size:13px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.exp-nc-meta{font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--muted);}
+.exp-cascade-diagram{background:rgba(0,0,0,0.3);border:1px solid rgba(201,148,58,0.2);border-radius:4px;padding:16px 20px;margin:14px 0;font-family:'Share Tech Mono',monospace;font-size:12px;}
+.exp-cd-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.exp-cd-row:last-child{margin-bottom:0;}
+.exp-cd-node{padding:3px 10px;border-radius:3px;border:1px solid;white-space:nowrap;}
+.exp-cd-arrow{color:var(--gold);flex-shrink:0;}
+.exp-cd-label{color:var(--muted);font-size:11px;}
+.exp-badge{display:inline-block;padding:2px 8px;border-radius:2px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;font-family:'Share Tech Mono',monospace;}
+.exp-divider{border:none;border-top:1px solid rgba(201,148,58,0.15);margin:26px 0;}
 </style>
 </head>
 <body>
@@ -112,7 +168,10 @@ svg{width:100%;height:100%;}
 <div id="header">
   <span class="logo">iARM</span><div class="sep"></div>
   <span class="hdr-title">Cross-Asset Mitigation</span>
-  <span class="badge">CRR™ PROTOTYPE</span>
+  <span class="badge">CRR&#8482; PROTOTYPE &middot; 3D</span>
+  <button class="hdr-btn on" id="btn-spin">AUTO-SPIN: ON</button>
+  <button class="hdr-btn" id="btn-reset">RESET VIEW</button>
+  <button class="hdr-btn" id="btn-guide" onclick="toggleGuide()">? GUIDE</button>
 </div>
 
 <div id="legend">
@@ -128,27 +187,26 @@ svg{width:100%;height:100%;}
   <div class="leg-row"><div class="leg-line" style="background:#27ae60"></div>Mitigated cascade</div>
 </div>
 
-<div id="hint">CLICK any node to edit strategies &nbsp;·&nbsp; DRAG to reposition &nbsp;·&nbsp; SCROLL to zoom</div>
+<div id="hint">CLICK any node to edit strategies &nbsp;&middot;&nbsp; DRAG node to reposition &nbsp;&middot;&nbsp; DRAG background to rotate 3D &nbsp;&middot;&nbsp; SCROLL to zoom &nbsp;&middot;&nbsp; MIDDLE-DRAG to pan &nbsp;&middot;&nbsp; DBL-CLICK node to unpin</div>
 <div id="svg-container"><svg id="graph"></svg></div>
 
 <!-- PANEL -->
 <div id="panel">
   <div class="ph">
     <span class="ph-title">Mitigation Strategies</span>
-    <button class="ph-close" id="ph-close">✕</button>
+    <button class="ph-close" id="ph-close">&#10005;</button>
   </div>
   <div class="pb">
     <div class="node-name" id="p-name"></div>
     <div class="node-meta" id="p-meta"></div>
-
     <div class="sec">Strategies</div>
     <table class="strat-table" id="strat-table">
       <thead>
         <tr>
           <th style="width:20px">On</th>
           <th>Name</th>
-          <th class="num" style="width:52px">Freq↓%</th>
-          <th class="num" style="width:52px">Sev↓%</th>
+          <th class="num" style="width:52px">Freq&#8595;%</th>
+          <th class="num" style="width:52px">Sev&#8595;%</th>
           <th class="num" style="width:68px">$/yr</th>
           <th style="width:20px"></th>
         </tr>
@@ -156,28 +214,21 @@ svg{width:100%;height:100%;}
       <tbody id="strat-tbody"></tbody>
     </table>
     <button class="btn-add-row" id="btn-add-row">+ Add Strategy</button>
-
-    <!-- Combined results bar -->
     <div class="results-bar" id="results-bar">
-      <div class="rb-item"><div class="rb-label">Freq↓</div><div class="rb-val green" id="rb-freq">0%</div></div>
-      <div class="rb-item"><div class="rb-label">Sev↓</div><div class="rb-val green" id="rb-sev">0%</div></div>
+      <div class="rb-item"><div class="rb-label">Freq&#8595;</div><div class="rb-val green" id="rb-freq">0%</div></div>
+      <div class="rb-item"><div class="rb-label">Sev&#8595;</div><div class="rb-val green" id="rb-sev">0%</div></div>
       <div class="rb-item"><div class="rb-label">$/yr</div><div class="rb-val" id="rb-cost">$0</div></div>
       <div class="rb-item"><div class="rb-label">On</div><div class="rb-val" id="rb-on">0</div></div>
     </div>
-
-    <!-- Cascade context (read-only) -->
     <div id="p-cascade-info" style="display:none">
       <div class="sec" id="p-cascade-label">Cascade Relationships</div>
       <div class="cascade-info" id="p-cascade-body"></div>
     </div>
-
-    <!-- ROI preview -->
     <div class="roi-box" id="p-roi">
-      <div class="roi-row"><span class="sl">EAL Reduction</span><span class="rv" id="r-eal">—</span></div>
-      <div class="roi-row"><span class="sl">TVaR Reduction</span><span class="rv" id="r-tvar">—</span></div>
-      <div class="roi-row big"><span class="sl">Tail ROI</span><span class="rv" id="r-roi">—</span></div>
+      <div class="roi-row"><span class="sl">EAL Reduction</span><span class="rv" id="r-eal">&mdash;</span></div>
+      <div class="roi-row"><span class="sl">TVaR Reduction</span><span class="rv" id="r-tvar">&mdash;</span></div>
+      <div class="roi-row big"><span class="sl">Tail ROI</span><span class="rv" id="r-roi">&mdash;</span></div>
     </div>
-
     <button class="btn-apply" id="p-apply">Apply Mitigation</button>
     <button class="btn-clear" id="p-clear">Clear All Strategies</button>
   </div>
@@ -186,14 +237,355 @@ svg{width:100%;height:100%;}
 <div id="tooltip"></div>
 
 <div id="sumbar">
-  <div class="si"><span class="sl">PORTFOLIO TVaR₈₀</span><span class="sv" id="s-tvar">$13.3M</span></div>
+  <div class="si"><span class="sl">PORTFOLIO TVaR&#x2080;</span><span class="sv" id="s-tvar">$13.3M</span></div>
   <div class="si"><span class="sl">PORTFOLIO EAL</span><span class="sv" id="s-eal">$8.0M</span></div>
   <div class="si"><span class="sl">TOTAL SPEND</span><span class="sv g" id="s-spend">$0</span></div>
   <div class="si"><span class="sl">TVaR REDUCTION</span><span class="sv g" id="s-red">$0</span></div>
-  <div class="si"><span class="sl">PORTFOLIO TAIL ROI</span><span class="sv g" id="s-roi">—</span></div>
+  <div class="si"><span class="sl">PORTFOLIO TAIL ROI</span><span class="sv g" id="s-roi">&mdash;</span></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════
+     EXPLANATION DRAWER
+     ══════════════════════════════════════════════════ -->
+<div id="exp-overlay" onclick="handleOverlayClick(event)">
+  <div id="exp-drawer">
+    <div id="exp-header">
+      <div>
+        <div id="exp-eyebrow">CRR&#8482; &middot; Industrial Actuarial Risk Management</div>
+        <div id="exp-heading">Cross-Asset Mitigation &mdash; Reference Guide</div>
+      </div>
+      <button id="exp-close" onclick="closeGuide()" title="Close">&times;</button>
+    </div>
+    <div id="exp-body">
+
+      <div id="exp-toc">
+        <div id="exp-toc-label">Sections</div>
+        <ul>
+          <li><a href="#ex-what">What it is</a></li>
+          <li><a href="#ex-nodes">Asset nodes</a></li>
+          <li><a href="#ex-cascade">Cascade links</a></li>
+          <li><a href="#ex-physics">3D physics engine</a></li>
+          <li><a href="#ex-strategies">Mitigation strategies</a></li>
+          <li><a href="#ex-roi">ROI calculation</a></li>
+          <li><a href="#ex-controls">Controls</a></li>
+          <li><a href="#ex-sumbar">Portfolio summary bar</a></li>
+          <li><a href="#ex-why">Why it matters</a></li>
+        </ul>
+      </div>
+
+      <!-- 1 -->
+      <div class="exp-section" id="ex-what">
+        <div class="exp-h2">What it is</div>
+        <p class="exp-p">The Cross-Asset Mitigation Graph is an interactive 3D force-directed network that maps every significant asset in a plant portfolio as a node, connects assets that can trigger each other's failures with cascade links, and lets analysts add, toggle, and price mitigation strategies &mdash; all while watching the portfolio-level TVaR and EAL update in real time.</p>
+        <p class="exp-p">It implements the <strong>ECC (Endogenous Crisis Correlation)</strong> concept from the iARM&#8482; framework: failures do not occur independently. A single trigger event &mdash; a heater trip, a power interruption, a steam loss &mdash; can cascade to multiple downstream assets, amplifying both expected loss and tail risk beyond what any single-asset model would predict.</p>
+        <div class="exp-callout">
+          <div class="exp-callout-label">Core question answered</div>
+          <p>Which mitigation investment, applied where, removes the most tail risk per dollar &mdash; accounting for the fact that one asset's failure can cascade to several others?</p>
+        </div>
+      </div>
+
+      <hr class="exp-divider"/>
+
+      <!-- 2 -->
+      <div class="exp-section" id="ex-nodes">
+        <div class="exp-h2">Asset nodes</div>
+        <p class="exp-p">Each node represents a plant asset or system. Color encodes risk tier; size encodes relative tail importance.</p>
+
+        <div class="exp-h3">Node tiers</div>
+        <div class="exp-node-grid">
+          <div class="exp-nc">
+            <div class="exp-nc-dot" style="background:#c0392b;border-color:#c0392b;"></div>
+            <div><div class="exp-nc-name">High tail contributor</div><div class="exp-nc-meta">Top-ranked assets. Radius grows with tailPct contribution. Typically &gt;10% of portfolio tail.</div></div>
+          </div>
+          <div class="exp-nc">
+            <div class="exp-nc-dot" style="background:#e67e22;border-color:#e67e22;"></div>
+            <div><div class="exp-nc-name">Medium tail contributor</div><div class="exp-nc-meta">Ranked assets with moderate exposure (&lt;1% of tail), still material to overall loss.</div></div>
+          </div>
+          <div class="exp-nc">
+            <div class="exp-nc-dot" style="background:#2980b9;border-color:#2980b9;"></div>
+            <div><div class="exp-nc-name">Low / isolated</div><div class="exp-nc-meta">Minimal tail contribution, no significant cascade connections. Manage cost not risk.</div></div>
+          </div>
+          <div class="exp-nc">
+            <div class="exp-nc-dot" style="background:#8e44ad;border-color:#8e44ad;"></div>
+            <div><div class="exp-nc-name">Trigger node</div><div class="exp-nc-meta">Unranked by own exposure, but causes cascade failures across multiple downstream assets.</div></div>
+          </div>
+          <div class="exp-nc">
+            <div class="exp-nc-dot" style="background:#27ae60;border-color:#27ae60;"></div>
+            <div><div class="exp-nc-name">Mitigated</div><div class="exp-nc-meta">Any node with at least one active strategy applied. Stroke and fill turn green.</div></div>
+          </div>
+        </div>
+
+        <div class="exp-h3">Node sizing formula</div>
+        <div class="exp-formula">
+          trigger: r = 28 px (fixed — large to convey structural importance)<br/>
+          high:    r = 22 + tailPct &times; 0.18<br/>
+          med:     r = 18<br/>
+          low:     r = 14
+        </div>
+        <p class="exp-p">All radii are further scaled by the perspective factor during 3D projection, so nearer nodes appear larger.</p>
+
+        <div class="exp-h3">Valero CDU refinery dataset (13 assets)</div>
+        <table class="exp-table">
+          <thead><tr><th>Asset</th><th>Rank</th><th>Tail %</th><th>EAL</th><th>TVaR</th><th>&#955;/yr</th></tr></thead>
+          <tbody>
+            <tr><td>DCU Coke Storage/Loadout</td><td>#1</td><td>63%</td><td>$3.2M</td><td>$8.4M</td><td>2.1</td></tr>
+            <tr><td>DCU Coke Drums</td><td>#2</td><td>22%</td><td>$1.8M</td><td>$2.9M</td><td>1.4</td></tr>
+            <tr><td>CDU Atm Gas Oil Pumps</td><td>#3</td><td>14%</td><td>$1.1M</td><td>$1.8M</td><td>3.2</td></tr>
+            <tr><td>FCCU Regenerator</td><td>#4</td><td>0.6%</td><td>$480K</td><td>$620K</td><td>0.8</td></tr>
+            <tr><td>Crude Preheat Exchangers</td><td>#5</td><td>0.2%</td><td>$310K</td><td>$400K</td><td>2.6</td></tr>
+            <tr><td>VDU Bottoms Pumps</td><td>#6</td><td>0.1%</td><td>$260K</td><td>$330K</td><td>1.9</td></tr>
+            <tr><td>Sour Water Stripper</td><td>#7</td><td>0.07%</td><td>$190K</td><td>$240K</td><td>1.2</td></tr>
+            <tr><td>Instrument Air</td><td>#8</td><td>0.03%</td><td>$140K</td><td>$175K</td><td>0.6</td></tr>
+            <tr><td>Cooling Water Pumps</td><td>#9</td><td>0.02%</td><td>$95K</td><td>$115K</td><td>1.8</td></tr>
+            <tr><td>Flare K/O Drum</td><td>#10</td><td>0.01%</td><td>$72K</td><td>$88K</td><td>0.3</td></tr>
+            <tr><td>DCU Heater (Trigger)</td><td>&mdash;</td><td>&mdash;</td><td>$320K</td><td>$410K</td><td>0.9</td></tr>
+            <tr><td>MCC Power Feed (Trigger)</td><td>&mdash;</td><td>&mdash;</td><td>$180K</td><td>$220K</td><td>0.5</td></tr>
+            <tr><td>Steam Gen (Trigger)</td><td>&mdash;</td><td>&mdash;</td><td>$210K</td><td>$270K</td><td>1.1</td></tr>
+          </tbody>
+        </table>
+
+        <div class="exp-stat-grid">
+          <div class="exp-stat"><div class="exp-stat-label">Portfolio TVaR&#x2080;</div><div class="exp-stat-val">$13.3M</div><div class="exp-stat-sub">before mitigation</div></div>
+          <div class="exp-stat"><div class="exp-stat-label">Portfolio EAL</div><div class="exp-stat-val">$8.0M</div><div class="exp-stat-sub">expected annual loss</div></div>
+          <div class="exp-stat"><div class="exp-stat-label">Total assets</div><div class="exp-stat-val">13</div><div class="exp-stat-sub">10 ranked + 3 triggers</div></div>
+          <div class="exp-stat"><div class="exp-stat-label">Cascade links</div><div class="exp-stat-val">6</div><div class="exp-stat-sub">trigger &rarr; dependent</div></div>
+        </div>
+      </div>
+
+      <hr class="exp-divider"/>
+
+      <!-- 3 -->
+      <div class="exp-section" id="ex-cascade">
+        <div class="exp-h2">Cascade links</div>
+        <p class="exp-p">Gold dashed lines with arrowheads connect trigger nodes to the assets they can bring down. When a trigger has an active mitigation strategy, its outgoing links turn solid green.</p>
+
+        <div class="exp-cascade-diagram">
+          <div class="exp-cd-row">
+            <div class="exp-cd-node" style="color:#8e44ad;border-color:#8e44ad;">DCU Heater</div>
+            <div class="exp-cd-arrow">&rarr;</div>
+            <div class="exp-cd-node" style="color:#c0392b;border-color:#c0392b;">DCU Coke Storage/Loadout</div>
+            <div class="exp-cd-label">&nbsp;#1, 63% tail</div>
+          </div>
+          <div class="exp-cd-row">
+            <div class="exp-cd-node" style="color:#8e44ad;border-color:#8e44ad;">DCU Heater</div>
+            <div class="exp-cd-arrow">&rarr;</div>
+            <div class="exp-cd-node" style="color:#c0392b;border-color:#c0392b;">DCU Coke Drums</div>
+            <div class="exp-cd-label">&nbsp;#2, 22% tail</div>
+          </div>
+          <div class="exp-cd-row">
+            <div class="exp-cd-node" style="color:#8e44ad;border-color:#8e44ad;">MCC Power Feed</div>
+            <div class="exp-cd-arrow">&rarr;</div>
+            <div class="exp-cd-node" style="color:#c0392b;border-color:#c0392b;">CDU Atm Gas Oil Pumps</div>
+            <div class="exp-cd-label">&nbsp;#3, 14% tail</div>
+          </div>
+          <div class="exp-cd-row">
+            <div class="exp-cd-node" style="color:#8e44ad;border-color:#8e44ad;">MCC Power Feed</div>
+            <div class="exp-cd-arrow">&rarr;</div>
+            <div class="exp-cd-node" style="color:#e67e22;border-color:#e67e22;">FCCU Regenerator</div>
+            <div class="exp-cd-label">&nbsp;#4</div>
+          </div>
+          <div class="exp-cd-row">
+            <div class="exp-cd-node" style="color:#8e44ad;border-color:#8e44ad;">Steam Gen</div>
+            <div class="exp-cd-arrow">&rarr;</div>
+            <div class="exp-cd-node" style="color:#c0392b;border-color:#c0392b;">DCU Coke Drums</div>
+            <div class="exp-cd-label">&nbsp;shared dependency with DCU Heater</div>
+          </div>
+          <div class="exp-cd-row">
+            <div class="exp-cd-node" style="color:#8e44ad;border-color:#8e44ad;">Steam Gen</div>
+            <div class="exp-cd-arrow">&rarr;</div>
+            <div class="exp-cd-node" style="color:#c0392b;border-color:#c0392b;">CDU Atm Gas Oil Pumps</div>
+            <div class="exp-cd-label">&nbsp;shared dependency with MCC Power</div>
+          </div>
+        </div>
+
+        <div class="exp-callout teal">
+          <div class="exp-callout-label">Why shared dependencies matter</div>
+          <p>DCU Coke Drums has two trigger parents (DCU Heater and Steam Gen). A Steam Gen failure simultaneously impairs two of the top-three tail contributors &mdash; making Steam Gen the highest-leverage mitigation target even though its own EAL is only $210K.</p>
+        </div>
+      </div>
+
+      <hr class="exp-divider"/>
+
+      <!-- 4 -->
+      <div class="exp-section" id="ex-physics">
+        <div class="exp-h2">3D physics engine</div>
+        <p class="exp-p">A custom 3D force-directed simulation runs entirely in JavaScript. There is no WebGL &mdash; the scene is a single SVG element and nodes are translated SVG groups. The 3D effect comes from perspective projection of a live force simulation in x/y/z world coordinates.</p>
+
+        <div class="exp-h3">Force components</div>
+        <div class="exp-steps">
+          <div class="exp-step"><div class="exp-step-num">1</div><div class="exp-step-body"><strong>Repulsion</strong><span>Every pair of nodes repels at force &prop; 9000 / distance&sup2;. O(n&sup2;) &mdash; acceptable at 13 nodes.</span></div></div>
+          <div class="exp-step"><div class="exp-step-num">2</div><div class="exp-step-body"><strong>Spring attraction</strong><span>Each cascade link is a spring: stiffness 0.04, rest length 150 units. Trigger&ndash;dependent pairs cluster together.</span></div></div>
+          <div class="exp-step"><div class="exp-step-num">3</div><div class="exp-step-body"><strong>Center gravity</strong><span>Weak center pull (0.02) prevents nodes drifting off-screen. Scales with alpha so it weakens as the simulation cools.</span></div></div>
+          <div class="exp-step"><div class="exp-step-num">4</div><div class="exp-step-body"><strong>Damping + bounding sphere</strong><span>Velocities &times;0.88 each frame. Positions clamped to world sphere radius 340 units.</span></div></div>
+          <div class="exp-step"><div class="exp-step-num">5</div><div class="exp-step-body"><strong>Alpha cooling</strong><span>Alpha starts at 1.0 and decays &times;0.97/frame. All forces are multiplied by alpha, so the layout settles over ~200 frames. Reheats to 0.3 on drag or Reset View.</span></div></div>
+        </div>
+
+        <div class="exp-h3">Perspective projection</div>
+        <div class="exp-formula">
+          rx  = x&middot;cos(yaw) + z&middot;sin(yaw) <em>  yaw rotation</em><br/>
+          ry  = y&middot;cos(pitch) &minus; rz1&middot;sin(pitch) <em>  pitch rotation</em><br/>
+          rz  = y&middot;sin(pitch) + rz1&middot;cos(pitch)<br/><br/>
+          persp = FOCAL / max(FOCAL + rz, 80) <em>  FOCAL = 1100</em><br/>
+          sx  = centerX + panX + rx &middot; persp &middot; zoom<br/>
+          sy  = centerY + panY + ry &middot; persp &middot; zoom
+        </div>
+        <p class="exp-p">The same perspective factor controls node radius, stroke width, link width, and depth-based opacity (0.38&ndash;1.0). Depth sorting re-appends SVG elements far&rarr;near every frame so closer nodes always render on top.</p>
+
+        <div class="exp-h3">Seeded layout</div>
+        <p class="exp-p">Node positions are initialized with a <strong>Mulberry32 seeded PRNG (seed = 42)</strong>, ensuring the starting layout is identical every page load &mdash; so demos always begin from the same state. Dragging a node pins it, persisting its position across spin cycles. Double-click to unpin.</p>
+      </div>
+
+      <hr class="exp-divider"/>
+
+      <!-- 5 -->
+      <div class="exp-section" id="ex-strategies">
+        <div class="exp-h2">Mitigation strategies</div>
+        <p class="exp-p">Clicking any node opens the Mitigation Strategies panel. Each node can carry any number of discrete strategies, each with its own frequency reduction, severity reduction, annual spend, and on/off toggle.</p>
+
+        <div class="exp-h3">Strategy fields</div>
+        <table class="exp-table">
+          <thead><tr><th>Field</th><th>What it means</th><th>How it's used</th></tr></thead>
+          <tbody>
+            <tr><td>On</td><td>Toggle to include or exclude this strategy</td><td>Only "on" rows contribute to the results bar and ROI preview</td></tr>
+            <tr><td>Name</td><td>Free-text label (e.g. "Vibration monitoring")</td><td>Displayed in tooltip; no numeric effect</td></tr>
+            <tr><td>Freq&#8595;%</td><td>Percent reduction in event frequency (&#955;)</td><td>Applied multiplicatively with other active strategies</td></tr>
+            <tr><td>Sev&#8595;%</td><td>Percent reduction in per-event cost</td><td>Applied multiplicatively with other active strategies</td></tr>
+            <tr><td>$/yr</td><td>Annualized cost of this strategy</td><td>Summed across enabled strategies; used in ROI calculation</td></tr>
+          </tbody>
+        </table>
+
+        <div class="exp-h3">Multiplicative reduction model</div>
+        <div class="exp-formula">
+          freqFactor = &prod; (1 &minus; freq_i / 100) <em>  for each enabled strategy i</em><br/>
+          sevFactor  = &prod; (1 &minus; sev_i  / 100)<br/><br/>
+          freqRed% = (1 &minus; freqFactor) &times; 100<br/>
+          totalCost = &sum; cost_i
+        </div>
+        <p class="exp-p">Two strategies each claiming 30% frequency reduction combine to 1 &minus; (0.7 &times; 0.7) = <strong>51% combined</strong>, not 60%. This reflects the physical reality that each strategy operates on the residual risk left by the previous one.</p>
+
+        <div class="exp-callout">
+          <div class="exp-callout-label">Trigger node leverage</div>
+          <p>When strategies are applied to a trigger node, its cascade links turn green. This signals that the mitigation is not just reducing that node's own EAL &mdash; it is also reducing the induced failure rate in every dependent asset downstream.</p>
+        </div>
+      </div>
+
+      <hr class="exp-divider"/>
+
+      <!-- 6 -->
+      <div class="exp-section" id="ex-roi">
+        <div class="exp-h2">ROI calculation</div>
+        <p class="exp-p">The panel's ROI preview and the portfolio summary bar use the same logic, applied at asset level and portfolio level respectively.</p>
+
+        <div class="exp-h3">Per-node ROI</div>
+        <div class="exp-formula">
+          ealRed  = EAL  &times; [1 &minus; (1 &minus; freqRed/100) &times; (1 &minus; sevRed/100)]<br/>
+          tvarRed = TVaR &times; [1 &minus; (1 &minus; freqRed/100) &times; (1 &minus; sevRed/100)]<br/><br/>
+          Tail ROI = tvarRed / totalAnnualCost
+        </div>
+        <p class="exp-p">A TVaR Tail ROI of <strong>2.5&times;</strong> means that for every dollar spent annually, $2.50 in tail exposure is eliminated.</p>
+
+        <div class="exp-h3">Portfolio summary</div>
+        <div class="exp-formula">
+          Total Spend    = &sum; cost_i (all enabled strategies, all nodes)<br/>
+          TVaR Reduction = &sum; [node.tvar &times; combinedFactor_node]<br/>
+          Portfolio Tail ROI = TVaR Reduction / Total Spend
+        </div>
+
+        <div class="exp-callout green">
+          <div class="exp-callout-label">Decision use</div>
+          <p>The Portfolio Tail ROI figure translates a reliability engineering decision into financial language: &ldquo;We propose spending $X per year, and our model projects that removes $Y from the tail risk reserve requirement &mdash; a Z&times; return on that spend.&rdquo;</p>
+        </div>
+
+        <div class="exp-callout red">
+          <div class="exp-callout-label">Current limitation</div>
+          <p>This ROI model does not yet propagate cascade effects. A strategy on a trigger node reduces only that node's own EAL/TVaR in the calculation, not the induced risk in dependent assets. Full cascade-adjusted ROI requires a Monte Carlo propagation pass &mdash; a planned enhancement.</p>
+        </div>
+      </div>
+
+      <hr class="exp-divider"/>
+
+      <!-- 7 -->
+      <div class="exp-section" id="ex-controls">
+        <div class="exp-h2">Controls</div>
+        <ul class="exp-feat">
+          <li><strong>Left-drag background</strong> &mdash; trackball rotate</li>
+          <li><strong>Scroll</strong> &mdash; cursor-centered zoom (0.2&times;&ndash;4.0&times;)</li>
+          <li><strong>Middle-drag</strong> &mdash; pan the scene</li>
+          <li><strong>Left-drag node</strong> &mdash; move &amp; pin node</li>
+          <li><strong>Double-click node</strong> &mdash; unpin (returns to physics)</li>
+          <li><strong>Click node</strong> &mdash; open Strategies panel</li>
+          <li><strong>Hover node</strong> &mdash; tooltip with EAL, TVaR, cascade links</li>
+          <li><strong>Auto-Spin ON/OFF</strong> &mdash; continuous slow yaw rotation</li>
+          <li><strong>Reset View</strong> &mdash; home camera, reheat physics</li>
+          <li><strong>Apply Mitigation</strong> &mdash; commit strategies, update node color &amp; bar</li>
+          <li><strong>Clear All</strong> &mdash; remove all strategies from active node</li>
+          <li><strong>+ Add Strategy</strong> &mdash; append blank row to strategy table</li>
+        </ul>
+        <p class="exp-p" style="margin-top:12px">Dragging a node marks it <strong>pinned</strong> and excludes it from physics. Double-clicking unpins and returns it to the simulation. A plain click (no drag movement) does not pin &mdash; the panel opens and the node stays free.</p>
+      </div>
+
+      <hr class="exp-divider"/>
+
+      <!-- 8 -->
+      <div class="exp-section" id="ex-sumbar">
+        <div class="exp-h2">Portfolio summary bar</div>
+        <p class="exp-p">The fixed bar at the bottom updates each time "Apply Mitigation" is pressed:</p>
+        <table class="exp-table">
+          <thead><tr><th>Field</th><th>At load</th><th>What updates it</th></tr></thead>
+          <tbody>
+            <tr><td>Portfolio TVaR&#x2080;</td><td>$13.3M</td><td>Static baseline &mdash; portfolio TVaR before any mitigation</td></tr>
+            <tr><td>Portfolio EAL</td><td>$8.0M</td><td>Static baseline &mdash; portfolio expected annual loss</td></tr>
+            <tr><td>Total Spend</td><td>$0</td><td>Sum of all enabled strategy costs across all nodes</td></tr>
+            <tr><td>TVaR Reduction</td><td>$0</td><td>Aggregate TVaR removed by applied mitigation strategies</td></tr>
+            <tr><td>Portfolio Tail ROI</td><td>&mdash;</td><td>TVaR Reduction / Total Spend; shows "&mdash;" when spend is zero</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <hr class="exp-divider"/>
+
+      <!-- 9 -->
+      <div class="exp-section" id="ex-why">
+        <div class="exp-h2">Why it matters</div>
+        <div class="exp-steps">
+          <div class="exp-step"><div class="exp-step-num">1</div><div class="exp-step-body"><strong>Structural leverage of trigger nodes</strong><span>The DCU Heater's own EAL is $320K &mdash; far below the top-ranked assets. But it is the direct cause of failures in DCU Coke Storage/Loadout (#1, $3.2M EAL) and DCU Coke Drums (#2, $1.8M EAL). A $50K/yr inspection upgrade potentially removes exposure across all three simultaneously.</span></div></div>
+          <div class="exp-step"><div class="exp-step-num">2</div><div class="exp-step-body"><strong>Shared dependencies amplify single-point exposure</strong><span>Steam Gen triggers both DCU Coke Drums and CDU Atm Gas Oil Pumps (#2 and #3). A single Steam Gen failure creates correlated losses in two top-tier assets in the same operational period &mdash; exactly the tail event that makes TVaR diverge from EAL. The graph makes this coupling visible; a ranked list does not.</span></div></div>
+          <div class="exp-step"><div class="exp-step-num">3</div><div class="exp-step-body"><strong>ROI comparison across the portfolio</strong><span>By entering strategy costs and reductions for multiple nodes and watching the Portfolio Tail ROI update, an analyst can compare "spend $80K/yr on vibration monitoring for AGOP pumps" against "spend $60K/yr on heater online inspection" and present the result in financial terms that a CFO can act on.</span></div></div>
+        </div>
+        <div class="exp-callout teal">
+          <div class="exp-callout-label">iARM&#8482; framework alignment</div>
+          <p>This graph implements the cross-asset dimension of the iARM&#8482; mission: quantify cost risk, prioritize mitigation efforts, and communicate outcomes in language that drives decisions. The 3D layout spatially separates asset clusters by cascade relationship, making structural dependencies legible in a way that a table or ranked list cannot.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
 </div>
 
 <script>
+// ── Guide drawer ──
+function toggleGuide(){
+  var ov=document.getElementById('exp-overlay');
+  var btn=document.getElementById('btn-guide');
+  var isOpen=ov.classList.contains('open');
+  ov.classList.toggle('open',!isOpen);
+  btn.classList.toggle('on',!isOpen);
+}
+function closeGuide(){
+  document.getElementById('exp-overlay').classList.remove('open');
+  document.getElementById('btn-guide').classList.remove('on');
+}
+function handleOverlayClick(e){
+  if(e.target===document.getElementById('exp-overlay'))closeGuide();
+}
+document.getElementById('exp-toc').addEventListener('click',function(e){
+  var a=e.target.closest('a');if(!a)return;
+  e.preventDefault();
+  var id=a.getAttribute('href').slice(1);
+  var el=document.getElementById(id);if(!el)return;
+  document.getElementById('exp-drawer').scrollTo({top:el.offsetTop-70,behavior:'smooth'});
+});
+
 // ── DATA ──────────────────────────────────────────────────────────────────────
 const NODES = [
   {id:"DCU-COKE-SL", label:"DCU Coke\nStorage/Loadout", rank:1,  tailPct:63,   eal:3200000, tvar:8400000, lambda:2.1, cv:1.4, tier:"high"},
@@ -220,11 +612,9 @@ const LINKS = [
   {source:"TRIG-STEAM",    target:"CDU-AGOP",    type:"cascade"},
 ];
 
-// strategies store: { nodeId: [ {on, name, freq, sev, cost} ] }
 const STRATS = {};
 function getS(id){ return STRATS[id] || []; }
 
-// ── HELPERS ───────────────────────────────────────────────────────────────────
 const TC={high:"#c0392b",med:"#e67e22",low:"#2980b9",trigger:"#8e44ad"};
 function nr(d){return d.tier==="trigger"?28:d.tier==="high"?22+d.tailPct*0.18:d.tier==="med"?18:14;}
 function fmt(v){return v>=1e6?`$${(v/1e6).toFixed(1)}M`:`$${(v/1000).toFixed(0)}K`;}
@@ -235,23 +625,35 @@ function getNode(id){return NODES.find(n=>n.id===id);}
 function depsOf(id){return LINKS.filter(l=>sid(l)===id).map(l=>tid(l));}
 function triggersOf(id){return LINKS.filter(l=>tid(l)===id).map(l=>sid(l));}
 
-// Combined reductions from enabled strategies — multiplicative
 function calcCombined(strategies){
   const enabled = strategies.filter(s=>s.on);
   const freqFactor = enabled.reduce((acc,s)=>acc*(1-s.freq/100),1);
   const sevFactor  = enabled.reduce((acc,s)=>acc*(1-s.sev/100),1);
   const totalCost  = enabled.reduce((acc,s)=>acc+s.cost,0);
-  return {
-    freqRed: (1-freqFactor)*100,
-    sevRed:  (1-sevFactor)*100,
-    cost:    totalCost,
-    count:   enabled.length,
-  };
+  return { freqRed:(1-freqFactor)*100, sevRed:(1-sevFactor)*100, cost:totalCost, count:enabled.length };
 }
 
-// ── SVG ───────────────────────────────────────────────────────────────────────
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const rand=mulberry32(42);
+
+NODES.forEach(n=>{
+  n.x=(rand()-0.5)*360; n.y=(rand()-0.5)*360; n.z=(rand()-0.5)*360;
+  n.vx=0; n.vy=0; n.vz=0; n.pinned=false;
+  n.sx=0; n.sy=0; n.scale=1; n.rz=0;
+});
+LINKS.forEach(l=>{ l.s=getNode(l.source); l.t=getNode(l.target); });
+
+const FOCAL=1100, WORLD_R=340;
+const CAM_HOME={yaw:0.55,pitch:0.22,zoom:1,panX:0,panY:0};
+let yaw=CAM_HOME.yaw, pitch=CAM_HOME.pitch, zoom=CAM_HOME.zoom;
+let panX=CAM_HOME.panX, panY=CAM_HOME.panY;
+let autoSpin=true;
+let alpha=1.0;
+function reheat(){ alpha=Math.max(alpha,0.3); }
+
 const svgEl=d3.select("#graph");
-const W=window.innerWidth,H=window.innerHeight-52-40;
+const container=document.getElementById("svg-container");
+let W=container.clientWidth, H=container.clientHeight;
 svgEl.attr("viewBox",`0 0 ${W} ${H}`);
 
 const defs=svgEl.append("defs");
@@ -262,48 +664,229 @@ const defs=svgEl.append("defs");
 });
 
 const g=svgEl.append("g");
-svgEl.call(d3.zoom().scaleExtent([0.3,3]).on("zoom",e=>g.attr("transform",e.transform)));
 
-const sim=d3.forceSimulation(NODES)
-  .force("link",d3.forceLink(LINKS).id(d=>d.id).distance(130).strength(0.7))
-  .force("charge",d3.forceManyBody().strength(-360))
-  .force("center",d3.forceCenter(W/2,H/2))
-  .force("collide",d3.forceCollide().radius(d=>nr(d)+22));
-
-const link=g.append("g").selectAll("path")
+const link=g.selectAll("path.link")
   .data(LINKS).enter().append("path")
   .attr("class","link cascade").attr("marker-end","url(#arr-gold)");
 
-const nodeG=g.append("g").selectAll(".node")
+const nodeG=g.selectAll(".node")
   .data(NODES).enter().append("g").attr("class","node")
-  .call(d3.drag()
-    .on("start",(e,d)=>{if(!e.active)sim.alphaTarget(0.3).restart();d.fx=d.x;d.fy=d.y;})
-    .on("drag", (e,d)=>{d.fx=e.x;d.fy=e.y;})
-    .on("end",  (e,d)=>{if(!e.active)sim.alphaTarget(0);d.fx=null;d.fy=null;}))
-  .on("click",openPanel)
+  .on("click",(event,d)=>{ if(!dragMoved) openPanel(event,d); })
+  .on("dblclick",(event,d)=>{ d.pinned=false; reheat(); event.stopPropagation(); })
   .on("mouseenter",showTip)
   .on("mouseleave",()=>{document.getElementById("tooltip").style.display="none";});
 
-nodeG.append("circle").attr("r",nr).attr("fill",d=>TC[d.tier]+"cc").attr("stroke",d=>TC[d.tier]).attr("stroke-width",2);
-nodeG.filter(d=>d.rank&&d.rank<=3).append("text")
+nodeG.append("circle").attr("r",d=>nr(d)).attr("fill",d=>TC[d.tier]+"cc").attr("stroke",d=>TC[d.tier]).attr("stroke-width",2);
+nodeG.filter(d=>d.rank&&d.rank<=3).append("text").attr("class","rank-lbl")
   .attr("y",-4).attr("font-family","'Share Tech Mono',monospace").attr("font-size","10px")
   .attr("fill","#C9943A").attr("text-anchor","middle").text(d=>`#${d.rank}`);
 nodeG.each(function(d){
-  const el=d3.select(this),r=nr(d),parts=d.label.split("\n"),gap=13,off=parts.length===1?0:-(gap/2);
-  parts.forEach((p,i)=>el.append("text").attr("y",r+12+i*gap+off)
+  const el=d3.select(this),parts=d.label.split("\n");
+  d._labelLines=parts.length;
+  parts.forEach((p,i)=>el.append("text").attr("class","name-lbl").attr("data-i",i)
     .attr("font-size",d.tier==="trigger"?"10px":"11px")
     .attr("fill",d.tier==="trigger"?"#c39bd3":"var(--text)").attr("text-anchor","middle").text(p));
 });
 
-sim.on("tick",()=>{
-  link.attr("d",l=>{
-    const r=nr(l.target),dx=l.target.x-l.source.x,dy=l.target.y-l.source.y,dist=Math.sqrt(dx*dx+dy*dy)||1;
-    return `M${l.source.x},${l.source.y} L${l.target.x-(dx/dist)*(r+8)},${l.target.y-(dy/dist)*(r+8)}`;
+function stepPhysics(){
+  const REPULSION=9000, SPRING_K=0.04, REST_LEN=150, CENTER_G=0.02, DAMPING=0.88;
+  for(const n of NODES){ n.vx*=DAMPING; n.vy*=DAMPING; n.vz*=DAMPING; }
+  for(let i=0;i<NODES.length;i++){
+    for(let j=i+1;j<NODES.length;j++){
+      const a=NODES[i], b=NODES[j];
+      const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z;
+      const d2=dx*dx+dy*dy+dz*dz+1;
+      const dist=Math.sqrt(d2);
+      const f=REPULSION*alpha/d2;
+      const fx=f*dx/dist, fy=f*dy/dist, fz=f*dz/dist;
+      a.vx-=fx; a.vy-=fy; a.vz-=fz;
+      b.vx+=fx; b.vy+=fy; b.vz+=fz;
+    }
+  }
+  for(const l of LINKS){
+    const a=l.s, b=l.t;
+    const dx=b.x-a.x, dy=b.y-a.y, dz=b.z-a.z;
+    const dist=Math.sqrt(dx*dx+dy*dy+dz*dz)+0.001;
+    const f=(dist-REST_LEN)*SPRING_K*alpha;
+    const fx=f*dx/dist, fy=f*dy/dist, fz=f*dz/dist;
+    a.vx+=fx; a.vy+=fy; a.vz+=fz;
+    b.vx-=fx; b.vy-=fy; b.vz-=fz;
+  }
+  for(const n of NODES){
+    n.vx-=n.x*CENTER_G*alpha;
+    n.vy-=n.y*CENTER_G*alpha;
+    n.vz-=n.z*CENTER_G*alpha;
+  }
+  for(const n of NODES){
+    if(n.pinned) continue;
+    n.x+=n.vx; n.y+=n.vy; n.z+=n.vz;
+    const len=Math.sqrt(n.x*n.x+n.y*n.y+n.z*n.z);
+    if(len>WORLD_R){ const k=WORLD_R/len; n.x*=k; n.y*=k; n.z*=k; }
+  }
+}
+
+function projectAndRender(){
+  const cx=W/2, cy=H/2;
+  const cosY=Math.cos(yaw), sinY=Math.sin(yaw);
+  const cosP=Math.cos(pitch), sinP=Math.sin(pitch);
+  for(const n of NODES){
+    const rx = n.x*cosY + n.z*sinY;
+    const rz1= -n.x*sinY + n.z*cosY;
+    const ry = n.y*cosP - rz1*sinP;
+    const rz = n.y*sinP + rz1*cosP;
+    const persp=FOCAL/Math.max(FOCAL+rz,80);
+    const s=persp*zoom;
+    n.sx=cx+panX+rx*s;
+    n.sy=cy+panY+ry*s;
+    n.scale=s;
+    n.rz=rz;
+    const t=Math.min(Math.max((persp-0.62)/0.85,0),1);
+    n.opacity=0.38+0.62*t;
+  }
+  nodeG.each(function(d){
+    const el=this;
+    el.setAttribute("transform",`translate(${d.sx},${d.sy})`);
+    el.style.opacity=d.opacity;
+    const r=nr(d)*d.scale;
+    const circ=el.querySelector("circle");
+    circ.setAttribute("r",r);
+    circ.style.strokeWidth=Math.max(2*d.scale,0.75);
+    const gap=13, off=d._labelLines===1?0:-(gap/2);
+    el.querySelectorAll("text.name-lbl").forEach(t=>{
+      const i=+t.getAttribute("data-i");
+      t.setAttribute("y",r+12+i*gap+off);
+    });
+    const rk=el.querySelector("text.rank-lbl");
+    if(rk) rk.setAttribute("y",-4*d.scale);
   });
-  nodeG.attr("transform",d=>`translate(${d.x},${d.y})`);
+  link.each(function(l){
+    const a=l.s, b=l.t;
+    const dx=b.sx-a.sx, dy=b.sy-a.sy;
+    const dist=Math.sqrt(dx*dx+dy*dy)||1;
+    const gapEnd=nr(b)*b.scale+8;
+    this.setAttribute("d",`M${a.sx},${a.sy} L${b.sx-(dx/dist)*gapEnd},${b.sy-(dy/dist)*gapEnd}`);
+    const avg=(a.scale+b.scale)/2;
+    this.style.strokeWidth=Math.max((this.classList.contains("mitigated")?2.5:2)*avg,0.6);
+    this.style.opacity=Math.min(a.opacity,b.opacity);
+    l._rz=Math.max(a.rz,b.rz)+0.5;
+  });
+  const items=[];
+  link.each(function(l){ items.push({el:this,rz:l._rz}); });
+  nodeG.each(function(d){ items.push({el:this,rz:d.rz}); });
+  items.sort((p,q)=>q.rz-p.rz);
+  for(const it of items) g.node().appendChild(it.el);
+}
+
+let dragging=null, dragMoved=false;
+let rotating=false, panning=false;
+
+function frame(){
+  if(autoSpin && !dragging && !rotating && !panning) yaw+=0.0030;
+  if(alpha>=0.001){ stepPhysics(); alpha*=0.97; }
+  projectAndRender();
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+
+const svgDom=document.getElementById("graph");
+function svgPoint(e){
+  const r=svgDom.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*(W/r.width), y:(e.clientY-r.top)*(H/r.height)};
+}
+
+let dragStartScreen=null, dragStartWorld=null;
+
+nodeG.on("pointerdown",function(event,d){
+  if(event.button!==0) return;
+  dragging=d; dragMoved=false;
+  dragStartScreen=svgPoint(event);
+  dragStartWorld={x:d.x,y:d.y,z:d.z};
+  d.pinned=true;
+  this.setPointerCapture(event.pointerId);
+  event.stopPropagation();
+});
+nodeG.on("pointermove",function(event){
+  if(!dragging) return;
+  const p=svgPoint(event);
+  const dsx=p.x-dragStartScreen.x, dsy=p.y-dragStartScreen.y;
+  if(Math.sqrt(dsx*dsx+dsy*dsy)>4) dragMoved=true;
+  const s=Math.max(dragging.scale,0.05);
+  const ax=dsx/s, ay=dsy/s;
+  const cosY=Math.cos(yaw), sinY=Math.sin(yaw);
+  const cosP=Math.cos(pitch), sinP=Math.sin(pitch);
+  const wx = ax*cosY + ay*sinP*sinY;
+  const wy = ay*cosP;
+  const wz = ax*sinY - ay*sinP*cosY;
+  dragging.x=dragStartWorld.x+wx;
+  dragging.y=dragStartWorld.y+wy;
+  dragging.z=dragStartWorld.z+wz;
+  reheat();
+  event.stopPropagation();
+});
+nodeG.on("pointerup",function(event){
+  if(!dragging) return;
+  if(!dragMoved) dragging.pinned=false;
+  try{ this.releasePointerCapture(event.pointerId); }catch(_){}
+  dragging=null;
+  event.stopPropagation();
 });
 
-// ── PANEL ─────────────────────────────────────────────────────────────────────
+let rotStart=null, rot0=null, panStart=null, pan0=null;
+
+svgDom.addEventListener("pointerdown",e=>{
+  if(e.button===0){
+    rotating=true;
+    rotStart=svgPoint(e); rot0={yaw,pitch};
+    svgDom.setPointerCapture(e.pointerId);
+  } else if(e.button===1){
+    panning=true;
+    panStart=svgPoint(e); pan0={x:panX,y:panY};
+    svgDom.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  }
+});
+svgDom.addEventListener("pointermove",e=>{
+  if(rotating){
+    const p=svgPoint(e);
+    yaw   = rot0.yaw   + (p.x-rotStart.x)*0.008;
+    pitch = Math.min(Math.max(rot0.pitch + (p.y-rotStart.y)*0.008,-1.35),1.35);
+  } else if(panning){
+    const p=svgPoint(e);
+    panX=pan0.x+(p.x-panStart.x);
+    panY=pan0.y+(p.y-panStart.y);
+  }
+});
+svgDom.addEventListener("pointerup",e=>{
+  if(rotating||panning){
+    rotating=false; panning=false;
+    try{ svgDom.releasePointerCapture(e.pointerId); }catch(_){}
+  }
+});
+
+document.getElementById("svg-container").addEventListener("wheel",e=>{
+  e.preventDefault();
+  const factor=e.deltaY<0?1.1:1/1.1;
+  const newZoom=Math.min(Math.max(zoom*factor,0.2),4.0);
+  const applied=newZoom/zoom;
+  if(Math.abs(applied-1)<1e-9) return;
+  const p=svgPoint(e);
+  const cx=W/2, cy=H/2;
+  panX=(p.x-cx)-((p.x-cx)-panX)*applied;
+  panY=(p.y-cy)-((p.y-cy)-panY)*applied;
+  zoom=newZoom;
+},{passive:false});
+
+document.getElementById("btn-spin").addEventListener("click",e=>{
+  autoSpin=!autoSpin;
+  e.target.textContent=`AUTO-SPIN: ${autoSpin?"ON":"OFF"}`;
+  e.target.classList.toggle("on",autoSpin);
+});
+document.getElementById("btn-reset").addEventListener("click",()=>{
+  yaw=CAM_HOME.yaw; pitch=CAM_HOME.pitch; zoom=CAM_HOME.zoom;
+  panX=CAM_HOME.panX; panY=CAM_HOME.panY;
+  reheat();
+});
+
 let active=null;
 
 function openPanel(event,d){
@@ -313,10 +896,7 @@ function openPanel(event,d){
   document.getElementById("p-meta").textContent=
     `λ=${d.lambda}/yr  |  EAL ${fmt(d.eal)}  |  TVaR ${fmt(d.tvar)}`+
     (d.rank?`  |  Rank #${d.rank}`:"  |  Trigger");
-
   renderStratTable();
-
-  // cascade context
   const deps=depsOf(d.id),trigs=triggersOf(d.id);
   const ciDiv=document.getElementById("p-cascade-info");
   if(deps.length||trigs.length){
@@ -331,7 +911,6 @@ function openPanel(event,d){
     }
     document.getElementById("p-cascade-body").innerHTML=html;
   } else { ciDiv.style.display="none"; }
-
   document.getElementById("panel").classList.add("open");
 }
 
@@ -349,11 +928,9 @@ function renderStratTable(){
       <td><input class="ti" data-i="${i}" data-f="freq" type="number" min="0" max="100" value="${s.freq||""}" placeholder="0"></td>
       <td><input class="ti" data-i="${i}" data-f="sev"  type="number" min="0" max="100" value="${s.sev||""}"  placeholder="0"></td>
       <td><input class="ti" data-i="${i}" data-f="cost" type="number" min="0" value="${s.cost||""}" placeholder="0"></td>
-      <td><button class="row-del" data-i="${i}">×</button></td>`;
+      <td><button class="row-del" data-i="${i}">&#215;</button></td>`;
     tbody.appendChild(tr);
   });
-
-  // attach listeners
   tbody.querySelectorAll(".strat-cb").forEach(el=>{
     el.addEventListener("change",e=>{
       const i=+e.target.dataset.i;
@@ -388,7 +965,6 @@ function updateResultsBar(){
   document.getElementById("rb-sev").textContent =fmtPct(c.sevRed);
   document.getElementById("rb-cost").textContent=fmt(c.cost);
   document.getElementById("rb-on").textContent  =c.count;
-
   const d=active;
   const roiBox=document.getElementById("p-roi");
   if(c.cost>0&&c.count>0){
@@ -413,7 +989,6 @@ document.getElementById("ph-close").addEventListener("click",()=>document.getEle
 
 document.getElementById("p-apply").addEventListener("click",()=>{
   if(!active) return;
-  // prune empty rows
   const cleaned=(STRATS[active.id]||[]).filter(s=>s.name||s.freq||s.sev||s.cost);
   if(cleaned.length) STRATS[active.id]=cleaned;
   else delete STRATS[active.id];
@@ -428,7 +1003,6 @@ document.getElementById("p-clear").addEventListener("click",()=>{
   document.getElementById("panel").classList.remove("open");
 });
 
-// ── VISUALS ───────────────────────────────────────────────────────────────────
 function hasActiveMit(id){
   const s=getS(id); return s.some(x=>x.on&&(x.freq||x.sev||x.cost));
 }
@@ -455,7 +1029,6 @@ function summarize(){
   document.getElementById("s-roi").textContent  =roi>0?`${roi.toFixed(2)}x`:"—";
 }
 
-// ── TOOLTIP ───────────────────────────────────────────────────────────────────
 function showTip(event,d){
   const deps=depsOf(d.id),trigs=triggersOf(d.id);
   const strats=getS(d.id),c=calcCombined(strats);
@@ -479,9 +1052,9 @@ function showTip(event,d){
 }
 
 window.addEventListener("resize",()=>{
-  const nw=window.innerWidth,nh=window.innerHeight-52-40;
-  svgEl.attr("viewBox",`0 0 ${nw} ${nh}`);
-  sim.force("center",d3.forceCenter(nw/2,nh/2)).alpha(0.3).restart();
+  W=container.clientWidth; H=container.clientHeight;
+  svgEl.attr("viewBox",`0 0 ${W} ${H}`);
+  reheat();
 });
 </script>
 </body>
